@@ -16,6 +16,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * 示例场景：把 ULV 输入总线真实的 fancy UI 画在机器上方，往 0 号槽位写 64 个草方块，
@@ -60,16 +61,18 @@ public class InputBusUi {
                 .attachKeyFrame();
         scene.idle(120);
 
-        // 第三次调用：在机器顶面贴一条传送带覆盖板，机器不支持或放不上会在日志里报错。
-        MachineUIs.showUI(scene, ULV_INPUT_BUS_UI).at(busPos)
-                .cover(Direction.UP, GTCEu.id("conveyor"), 10)
+        // 第三次调用：在机器顶面贴一条传送带覆盖板。分级覆盖板的 id 带等级后缀，这里用 lv。
+        // 指向点比方块中心低一点，免得 speech box 的小尾巴正好压在顶面的覆盖板上。
+        Vec3 lower = util.vector().centerOf(busPos).add(0, -0.35, 0);
+        MachineUIs.showUI(scene, ULV_INPUT_BUS_UI).at(lower, busPos)
+                .cover(Direction.UP, GTCEu.id("conveyor.lv"), 10)
                 .show(140);
+        scene.idle(40);
         scene.overlay().showText(70)
                 .text("Covers can be put on a chosen side as well: a conveyor on top.")
                 .pointAt(util.vector().topOf(busPos))
-                .placeNearTarget()
                 .attachKeyFrame();
-        scene.idle(150);
+        scene.idle(120);
         scene.markAsFinished();
     }
 }

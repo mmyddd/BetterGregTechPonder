@@ -4,6 +4,7 @@
 package com.ctnh.gtponder.client.ponder.machine;
 
 import com.ctnh.gtponder.GTPonder;
+import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.ICoverable;
 import com.gregtechceu.gtceu.api.cover.CoverBehavior;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
@@ -14,6 +15,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.Locale;
 
 /**
  * 在机器的指定面放一块覆盖板。
@@ -64,7 +67,7 @@ public final class CoverChange implements MachineEdit {
         }
         CoverDefinition definition = GTRegistries.COVERS.get(coverId);
         if (definition == null) {
-            report(machinePos, "no cover is registered under this id");
+            report(machinePos, "no cover is registered under this id" + tierSuffixHint());
             return;
         }
         try {
@@ -100,6 +103,21 @@ public final class CoverChange implements MachineEdit {
             coverable.markDirty();
         }
         previous = null;
+    }
+
+    /**
+     * 分级覆盖板按等级分别注册（{@code gtceu:conveyor.lv} 这种，等级后缀用小写），
+     * 少了后缀时给一条能直接抄的提示。
+     */
+    private String tierSuffixHint() {
+        for (int tier = 0; tier < GTValues.VN.length; tier++) {
+            ResourceLocation candidate = new ResourceLocation(coverId.getNamespace(),
+                    coverId.getPath() + "." + GTValues.VN[tier].toLowerCase(Locale.ROOT));
+            if (GTRegistries.COVERS.get(candidate) != null) {
+                return ", did you mean " + candidate + "? tiered covers are registered per tier";
+            }
+        }
+        return "";
     }
 
     private void report(BlockPos machinePos, String reason) {
