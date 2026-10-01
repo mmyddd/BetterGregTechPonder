@@ -106,18 +106,35 @@ public final class PonderUiButtons {
         button = existing;
         placed = false;
         logged = false;
+        // 刚挂上/重新挂上时先藏起来：PonderButton 默认可见，在下一帧 afterRender 校正之前
+        // 它会以构造位置（屏幕正中）露一下脸，正好压住「思索结束」。
+        button.visible = false;
+        // 同一屏里只允许有一个我们的按钮：init 重跑、screen 被别的界面清空之后，
+        // 旧对象可能还留在控件表里，那种孤儿没人校正，会一直停在正中且可见。
+        for (DetailsButton other : detailsButtons(ponder)) {
+            if (other != button) {
+                other.visible = false;
+            }
+        }
         BetterGregTechPonder.LOGGER.info("BetterGregTechPonder: UI details button attached (screen {}x{}), bar: {}",
                 ponder.width, ponder.height, describe(ponder));
     }
 
     @Nullable
     private static DetailsButton existing(PonderUI ponder) {
+        List<DetailsButton> all = detailsButtons(ponder);
+        return all.isEmpty() ? null : all.get(0);
+    }
+
+    /** 这一屏里我们的全部按钮（正常只有一个，重挂之后可能留下孤儿）。 */
+    private static List<DetailsButton> detailsButtons(PonderUI ponder) {
+        List<DetailsButton> found = new ArrayList<>();
         for (GuiEventListener listener : ponder.children()) {
-            if (listener instanceof DetailsButton found) {
-                return found;
+            if (listener instanceof DetailsButton details) {
+                found.add(details);
             }
         }
-        return null;
+        return found;
     }
 
     /**
@@ -291,13 +308,27 @@ public final class PonderUiButtons {
             return false;
         }
         row.sort(Comparator.comparingInt(PonderButton::getX));
-        PonderButton anchor = row.get(0);
+        // 锚点必须在左半边：最左边的那些贴边按钮（退出之类）与中间的显示方块名称二选一，
+        // 绝不会落到右边的思索结束、重放上 —— 落到那里就会在它们身上叠一个按钮。
         int edge = Math.max(1, Math.round(ponder.width * EDGE_FRACTION));
+        int half = ponder.width / 2;
+        PonderButton anchor = null;
         for (PonderButton other : row) {
-            if (other.getX() >= edge) {
+            if (other.getX() >= edge && other.getX() < half) {
                 anchor = other;
                 break;
             }
+        }
+        if (anchor == null) {
+            for (PonderButton other : row) {
+                if (other.getX() < half) {
+                    anchor = other;
+                    break;
+                }
+            }
+        }
+        if (anchor == null) {
+            return false;
         }
         button.setX(anchor.getX() + anchor.getWidth() + GAP);
         button.setY(anchor.getY());
