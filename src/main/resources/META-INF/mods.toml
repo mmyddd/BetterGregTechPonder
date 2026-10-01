@@ -1,0 +1,41 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+license = "GPL-3.0"
+issueTrackerURL = "https://github.com/CTNH-Team/PonderGTUI/issues"
+
+[[mods]]
+modId = "pondergtui"
+version = "1.0.0"
+displayName = "Ponder GT UI"
+authors = "mmyddd"
+description = '''
+A client-side library that draws a real GregTech machine UI inside Create Ponder scenes.
+'''
+
+[[dependencies.pondergtui]]
+    modId = "forge"
+    type = "required"
+    versionRange = "[47,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.pondergtui]]
+    modId = "minecraft"
+    type = "required"
+    versionRange = "[1.20.1,1.21)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.pondergtui]]
+    modId = "gtceu"
+    type = "required"
+    versionRange = "*"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.pondergtui]]
+    modId = "create"
+    type = "required"
+    versionRange = "*"
+    ordering = "AFTER"
+    side = "BOTH"

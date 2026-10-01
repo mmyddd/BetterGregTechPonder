@@ -1,0 +1,76 @@
+plugins {
+    id 'net.neoforged.moddev.legacyforge' version '2.0.142'
+}
+
+version = mod_version
+base { archivesName = archives_base_name }
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { name = 'firstdarkdev'; url = 'https://maven.firstdarkdev.xyz/snapshots' }
+    maven { url = 'https://maven.tterrag.com/' }
+    maven {
+        name = 'CurseForge'
+        url = 'https://cursemaven.com/'
+        content { includeGroup 'curse.maven' }
+    }
+    maven { url = 'https://maven.createmod.net' }
+    maven { url = 'https://maven.minecraftforge.net/' }
+    maven { url = 'https://maven.architectury.dev' }
+    maven { url = 'https://modmaven.dev' }
+}
+
+legacyForge {
+
+    enable {
+        forgeVersion = project.minecraft_version + '-' + project.forge_version
+        disableRecompilation = false
+    }
+
+    parchment {
+        mappingsVersion = project.mapping_version
+        minecraftVersion = project.minecraft_version
+    }
+
+    runs {
+        client {
+            client()
+            jvmArgument '-Xmx4G'
+        }
+        server {
+            server()
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+dependencies {
+    modCompileOnly "curse.maven:gregtechceu-modern-890405:${gtceu_file_id}"
+    modCompileOnly "com.lowdragmc.ldlib:ldlib-forge-1.20.1:${ldlib_version}"
+    modCompileOnly "com.tterrag.registrate:Registrate:${registrate_version}"
+    modCompileOnly "dev.toma.configuration:configuration-forge-1.20.1:${configuration_version}"
+    modCompileOnly "dev.engine-room.flywheel:flywheel-forge-1.20.1:${flywheel_version}"
+    modCompileOnly "dev.architectury:architectury-forge:${architectury_version}"
+    modCompileOnly "net.createmod.ponder:Ponder-Forge-1.20.1:${ponder_version}"
+    modCompileOnly "com.simibubi.create:create-1.20.1:${create_version}:slim"
+
+    modRuntimeOnly "curse.maven:gregtechceu-modern-890405:${gtceu_file_id}"
+    modRuntimeOnly "com.lowdragmc.ldlib:ldlib-forge-1.20.1:${ldlib_version}"
+    modRuntimeOnly "com.tterrag.registrate:Registrate:${registrate_version}"
+    modRuntimeOnly "dev.toma.configuration:configuration-forge-1.20.1:${configuration_version}"
+    modRuntimeOnly "dev.engine-room.flywheel:flywheel-forge-1.20.1:${flywheel_version}"
+    modRuntimeOnly "dev.architectury:architectury-forge:${architectury_version}"
+    modRuntimeOnly "net.createmod.ponder:Ponder-Forge-1.20.1:${ponder_version}"
+    modRuntimeOnly "com.simibubi.create:create-1.20.1:${create_version}:slim"
+}
