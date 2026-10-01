@@ -123,7 +123,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             if (fluidWritten[i] && fluidOriginals[i] != null && resolved != null) {
                 Widget tank = tankAt(resolved, fluidWrites.get(i).index());
                 if (tank != null) {
-                    setTankFluid(tank, fluidOriginals[i].copy());
+                    writeTank(tank, fluidOriginals[i].copy(), i);
                 }
             }
             fluidWritten[i] = false;
@@ -305,7 +305,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             }
             int target = write.stack().getCount();
             if (elapsed >= FILL_TICKS) {
-                slot.setItem(write.stack().copy());
+                writeSlot(slot, write.stack().copy(), i);
                 written[i] = true;
                 continue;
             }
@@ -315,7 +315,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             }
             ItemStack partial = write.stack().copy();
             partial.setCount(count);
-            slot.setItem(partial);
+            writeSlot(slot, partial, i);
         }
     }
 
@@ -340,7 +340,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             }
             int target = write.stack().getAmount();
             if (elapsed >= FILL_TICKS) {
-                setTankFluid(tank, write.stack().copy());
+                writeTank(tank, write.stack().copy(), i);
                 fluidWritten[i] = true;
                 continue;
             }
@@ -350,7 +350,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             }
             FluidStack partial = write.stack().copy();
             partial.setAmount(amount);
-            setTankFluid(tank, partial);
+            writeTank(tank, partial, i);
         }
     }
 
@@ -380,11 +380,34 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         return null;
     }
 
+    /**
+     * 写储罐。{@code notify} 传 false：那是给服务端同步用的，ponder 里没有服务端，而且控件的
+     * {@code lastFluidInTank} 没经过 ModularUIGuiContainer 初始化，进同步路径会 NPE。
+     */
     private static void setTankFluid(Widget tank, FluidStack stack) {
         if (tank instanceof com.gregtechceu.gtceu.api.gui.widget.TankWidget gtTank) {
-            gtTank.setFluid(stack);
+            gtTank.setFluid(stack, false);
         } else if (tank instanceof com.lowdragmc.lowdraglib.gui.widget.TankWidget ldlTank) {
-            ldlTank.setFluid(FluidHelperImpl.toFluidStack(stack));
+            ldlTank.setFluid(FluidHelperImpl.toFluidStack(stack), false);
+        }
+    }
+
+    /** 写入控件出错不该把游戏带走：记一行日志，这条写入就算做完。 */
+    private void writeTank(Widget tank, FluidStack stack, int index) {
+        try {
+            setTankFluid(tank, stack);
+        } catch (Throwable t) {
+            fluidWritten[index] = true;
+            GTPonder.LOGGER.error("GTPonder: writing tank {} failed (machine at {})", index, machinePos, t);
+        }
+    }
+
+    private void writeSlot(SlotWidget slot, ItemStack stack, int index) {
+        try {
+            slot.setItem(stack);
+        } catch (Throwable t) {
+            written[index] = true;
+            GTPonder.LOGGER.error("GTPonder: writing slot {} failed (machine at {})", index, machinePos, t);
         }
     }
 

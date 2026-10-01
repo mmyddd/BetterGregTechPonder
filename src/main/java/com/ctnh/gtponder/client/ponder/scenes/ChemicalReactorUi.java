@@ -55,7 +55,7 @@ public class ChemicalReactorUi {
 
         // 第二次调用：往 0 号槽位写 64 个草方块。
         MachineUIs.showUI(scene, LV_CHEMICAL_REACTOR_UI).at(machinePos)
-                .slot(0)
+                .slot(1)
                 .withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
                 .show(200);
         scene.overlay().showText(80)
