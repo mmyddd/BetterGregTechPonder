@@ -36,6 +36,9 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
 `slot(index)` 对应 UI 里第 index 个物品槽，`tank(index)` 对应第 index 个储罐；两个参数都是「面板出现后第几个 tick 开始写入」，
 写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。
 
+**每段 `showUI` 演完（面板淡出时）会把机器恢复原状**——这一段写进去的物品/流体都会还原，
+不会带进下一段；场景回退同理。覆盖板走的是独立的 `MachineEdits` 指令，不受这个还原影响。
+
 覆盖板是改机器状态，用独立的场景指令，不挂在界面上：
 
 ```java

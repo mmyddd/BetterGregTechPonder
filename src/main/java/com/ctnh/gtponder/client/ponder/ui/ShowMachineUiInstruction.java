@@ -24,6 +24,8 @@ public class ShowMachineUiInstruction extends FadeInOutInstruction {
 
     @Override
     protected void hide(PonderScene scene) {
+        // 面板演完就把机器恢复原状：每段 showUI 只负责自己那一段，写入不带进下一段。
+        element.restoreMachine();
         element.setVisible(false);
     }
 

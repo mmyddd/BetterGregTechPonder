@@ -109,26 +109,42 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
      */
     @Override
     public void reset(PonderScene scene) {
-        ticksShown = 0;
-        for (int i = 0; i < written.length; i++) {
-            if (written[i] && originals[i] != null && resolved != null) {
-                SlotWidget slot = slotAt(resolved, writes.get(i).index());
-                if (slot != null) {
-                    slot.setItem(originals[i].copy());
+        restoreMachine();
+        resolved = null;
+    }
+
+    /**
+     * 把本元素写进机器的内容还原：槽位回到写入前的内容、储罐回到写入前的流体，并清掉时间线。
+     *
+     * <p>面板演完（{@link ShowMachineUiInstruction#hide}）和场景回退都会走这里，所以每一段
+     * {@code showUI} 结束后机器都是干净的，上一段写的物品/流体不会带进下一段。
+     */
+    void restoreMachine() {
+        if (resolved != null) {
+            for (int i = 0; i < written.length; i++) {
+                if (written[i] && originals[i] != null) {
+                    SlotWidget slot = slotAt(resolved, writes.get(i).index());
+                    if (slot != null) {
+                        writeSlot(slot, originals[i].copy(), i);
+                    }
                 }
             }
+            for (int i = 0; i < fluidWritten.length; i++) {
+                if (fluidWritten[i] && fluidOriginals[i] != null) {
+                    Widget tank = tankAt(resolved, fluidWrites.get(i).index());
+                    if (tank != null) {
+                        writeTank(tank, fluidOriginals[i].copy(), i);
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < written.length; i++) {
             written[i] = false;
         }
         for (int i = 0; i < fluidWritten.length; i++) {
-            if (fluidWritten[i] && fluidOriginals[i] != null && resolved != null) {
-                Widget tank = tankAt(resolved, fluidWrites.get(i).index());
-                if (tank != null) {
-                    writeTank(tank, fluidOriginals[i].copy(), i);
-                }
-            }
             fluidWritten[i] = false;
         }
-        resolved = null;
+        ticksShown = 0;
     }
 
     @Override
