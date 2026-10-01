@@ -4,11 +4,14 @@
 package com.ctnh.gtponder.client.ponder.ui;
 
 import com.ctnh.gtponder.GTPonder;
+import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
 import com.gregtechceu.gtceu.api.gui.fancy.FancyMachineUIWidget;
 import com.gregtechceu.gtceu.api.gui.fancy.TitleBarWidget;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
+import com.gregtechceu.gtceu.api.machine.fancyconfigurator.CircuitFancyConfigurator;
+import com.gregtechceu.gtceu.api.machine.feature.IHasCircuitSlot;
 import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
 
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
@@ -19,6 +22,7 @@ import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.lowdraglib.gui.widget.custom.PlayerInventoryWidget;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -33,6 +37,9 @@ import java.util.List;
  * fancy 组件，量出面板边界，按控件顺序收好机器槽位、储罐与进度条。
  */
 final class MachineUiPanelBuilder {
+
+    /** 编程电路 UI 与内容区下边缘之间的间距。 */
+    private static final int CIRCUIT_GAP = 4;
 
     private MachineUiPanelBuilder() {}
 
@@ -74,11 +81,47 @@ final class MachineUiPanelBuilder {
         // 进度条同理：ProgressWidget#drawInBackground 只在 client-side 模式下每帧问一次 supplier，
         // 否则画的是初始化那一刻的 lastProgressValue，永远是 0。
         progress.forEach(Widget::setClientSideWidget);
+        // 槽位收集完再挂电路 UI：它的幽灵槽不算进 slot(index) 里，序号跟实机 UI 保持一致。
+        attachCircuit(machine, root);
         Bounds bounds = measure(root);
         GTPonder.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s), {} tank(s)", machinePos,
                 bounds.width(), bounds.height(), bounds.x(), bounds.y(), slots.size(), tanks.size());
         return new MachineUiPanel(blockEntity, modularUi, bounds.x(), bounds.y(), bounds.width(), bounds.height(),
                 machine, slots, tanks, progress);
+    }
+
+    /**
+     * 在机器内容区正下方挂上编程电路：电路按钮居中，编码设置 UI（0~32 的格子）对称地排在按钮下面。
+     *
+     * <p>只画这一个配置器，不画整个配置器面板。组件都用 GT 自己的 {@link CircuitFancyConfigurator}，
+     * 按钮图标每帧重取，所以电路换了按钮与格子里的东西也跟着换；这里只画，不改机器状态。
+     */
+    private static void attachCircuit(MetaMachine machine, Widget root) {
+        if (!(root instanceof WidgetGroup parent) || !(machine instanceof IHasCircuitSlot holder) ||
+                !holder.isCircuitSlotEnabled()) {
+            return;
+        }
+        Widget content = root instanceof FancyMachineUIWidget fancy ? fancy.getPageContainer() : root;
+        CircuitFancyConfigurator configurator = new CircuitFancyConfigurator(holder.getCircuitInventory().storage);
+        Widget body = configurator.createConfigurator();
+        int width = Math.max(18, body.getSizeWidth());
+        WidgetGroup group = new WidgetGroup(content.getPositionX() + (content.getSizeWidth() - width) / 2,
+                content.getPositionY() + content.getSizeHeight() + CIRCUIT_GAP, width,
+                18 + CIRCUIT_GAP + body.getSizeHeight());
+        group.addWidget(new Widget((width - 18) / 2, 0, 18, 18) {
+
+            @Override
+            public void drawInBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+                super.drawInBackground(graphics, mouseX, mouseY, partialTicks);
+                GuiTextures.BUTTON.draw(graphics, mouseX, mouseY, getPositionX(), getPositionY(), getSizeWidth(),
+                        getSizeHeight());
+                configurator.getIcon().draw(graphics, mouseX, mouseY, getPositionX(), getPositionY(), getSizeWidth(),
+                        getSizeHeight());
+            }
+        });
+        body.setSelfPosition((width - body.getSizeWidth()) / 2, 18 + CIRCUIT_GAP);
+        group.addWidget(body);
+        parent.addWidget(group);
     }
 
     /**
