@@ -43,6 +43,10 @@ final class MachineUiOverlay {
     private static final int MARGIN = 6;
     /** 红框的边框粗细（面板像素，跟着面板一起缩）。 */
     private static final int BOX_THICKNESS = 2;
+    /** 红框最淡时的透明度。 */
+    private static final float BOX_ALPHA_MIN = 0.30f;
+    /** 红框最浓时的透明度；呼吸就在这两者之间来回。 */
+    private static final float BOX_ALPHA_MAX = 0.70f;
     /** 编辑模式下贴在槽位 tooltip 首行的序号，参数是机器里的真实槽位序号。 */
     private static final String SLOT_INDEX_KEY = "gtponder.tooltip.slot_index";
     /** 同上，储罐的序号。 */
@@ -111,7 +115,7 @@ final class MachineUiOverlay {
         if (boxes.isEmpty()) {
             return;
         }
-        int alpha = 0x80 + Math.round(0x7F * pulse);
+        int alpha = Math.round((BOX_ALPHA_MIN + (BOX_ALPHA_MAX - BOX_ALPHA_MIN) * pulse) * 255f);
         int color = (alpha << 24) | 0xFF3020;
         for (Box box : boxes) {
             int x0 = box.x() - 1;

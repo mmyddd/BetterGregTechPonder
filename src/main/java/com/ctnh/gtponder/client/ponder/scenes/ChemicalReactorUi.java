@@ -105,7 +105,6 @@ public class ChemicalReactorUi {
         MachineUIs.showUI(scene, LV_CHEMICAL_REACTOR_UI).at(machinePos)
                 .scale(0.3F)
                 .recipe("gtceu:chemical_reactor/methane_from_elements", 10)
-                .outlineProgress(20)
                 .show(160);
         scene.overlay().showText(80)
                 .text("One recipe id does the rest: the panel fills the inputs, sets the circuit it needs, runs while the bar moves, then drops the product in.")
