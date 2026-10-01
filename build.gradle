@@ -12,6 +12,10 @@ java {
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
 // datagen 的增量缓存留在仓库里，但不该进 mod jar。
 jar {
     exclude '.cache/**'

@@ -4,7 +4,7 @@
   "gtponder.ponder.chemical_reactor_ui.text_2": "64 grass blocks go into slot 1 and 64 glass into slot 2; the panel shows the machine's real inventory.",
   "gtponder.ponder.chemical_reactor_ui.text_3": "Fluids work the same way: tank 0 fills from 0 to 1000 mB in one second.",
   "gtponder.ponder.chemical_reactor_ui.text_4": "Covers can be put on a chosen side as well: a conveyor on top.",
-  "gtponder.ponder.chemical_reactor_ui.title": "Chemical Reactor UI",
+  "gtponder.ponder.chemical_reactor_ui.text_5": "The model can be switched between working and idle: only the front overlay changes, the recipe logic is left alone.",
   "gtponder.tooltip.slot_index": "slot %s",
   "gtponder.tooltip.tank_index": "tank %s"
 }

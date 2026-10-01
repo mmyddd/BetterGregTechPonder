@@ -22,21 +22,14 @@ import net.minecraftforge.fluids.FluidStack;
 
 /**
  * 示例场景：把 LV 化学反应釜真实的 fancy UI 画在机器上方，往 1 号槽位写 64 个草方块、2 号槽位写 64 个玻璃、
- * 0 号储罐灌 1000 mB 水，最后在顶面贴一条传送带覆盖板。
+ * 0 号储罐灌 1000 mB 水，在顶面贴一条传送带覆盖板，最后把机器模型切成工作中的样子再切回待机。
  *
  * <p>storyboard 是 3x3 地板 + (1,1,1) 的 {@code gtceu:lv_chemical_reactor}（facing=north）。
+ *
+ * <p>文案写在调用点上，不用常量：{@code title(...)} 的第一个参数是场景 id，Ponder 按
+ * {@code gtponder.ponder.<场景 id>.header|text_N} 把这里的正文收进 lang，改文案不用同步改别处。
  */
 public class ChemicalReactorUi {
-
-    /** 场景 id，同时是 lang key 的前缀（{@code gtponder.ponder.<sceneId>.text_1} 这种）。 */
-    public static final String SCENE_ID = "chemical_reactor_ui";
-    public static final String TITLE = "Chemical Reactor UI";
-
-    /** 场景文案：既是运行时的默认文字，也是 datagen 里英文 lang 的来源。 */
-    public static final String TEXT_1 = "The panel is the machine's own UI, without the player inventory.";
-    public static final String TEXT_2 = "64 grass blocks go into slot 1 and 64 glass into slot 2; the panel shows the machine's real inventory.";
-    public static final String TEXT_3 = "Fluids work the same way: tank 0 fills from 0 to 1000 mB in one second.";
-    public static final String TEXT_4 = "Covers can be put on a chosen side as well: a conveyor on top.";
 
     /** 界面定义一次，其余场景可以直接复用这个常量。 */
     private static final MachineUI LV_CHEMICAL_REACTOR_UI = MachineUI.of(GTMachines.CHEMICAL_REACTOR[GTValues.LV])
@@ -45,7 +38,7 @@ public class ChemicalReactorUi {
     private ChemicalReactorUi() {}
 
     public static void common(SceneBuilder scene, SceneBuildingUtil util) {
-        scene.title(SCENE_ID, TITLE);
+        scene.title("chemical_reactor_ui", "LV Chemical Reactor");
         scene.configureBasePlate(0, 0, 5);
         scene.showBasePlate();
         scene.idle(10);
@@ -53,7 +46,7 @@ public class ChemicalReactorUi {
         BlockPos machinePos = util.grid().at(1, 1, 1);
         scene.world().showSection(util.select().position(machinePos), Direction.DOWN);
         scene.overlay().showText(60)
-                .text(TEXT_1)
+                .text("The panel is the machine's own UI, without the player inventory.")
                 .pointAt(util.vector().centerOf(machinePos))
                 .placeNearTarget()
                 .attachKeyFrame();
@@ -71,7 +64,9 @@ public class ChemicalReactorUi {
                 .slot(2)
                 .withItem(new ItemStack(Items.GLASS, 64), 20)
                 .show(160);
-        scene.overlay().showText(80).text(TEXT_2).attachKeyFrame();
+        scene.overlay().showText(80)
+                .text("64 grass blocks go into slot 1 and 64 glass into slot 2; the panel shows the machine's real inventory.")
+                .attachKeyFrame();
         scene.idle(180);
 
         // 第三次调用：往 0 号储罐灌 1000 mB 水，数量同样从 0 在 1 秒内涨到目标值。
@@ -79,17 +74,29 @@ public class ChemicalReactorUi {
                 .tank(0)
                 .withFluid(new FluidStack(Fluids.WATER, 1000), 20)
                 .show(160);
-        scene.overlay().showText(80).text(TEXT_3).attachKeyFrame();
+        scene.overlay().showText(80)
+                .text("Fluids work the same way: tank 0 fills from 0 to 1000 mB in one second.")
+                .attachKeyFrame();
         scene.idle(180);
 
         // 覆盖板是改机器状态，跟界面无关：直接挂一条场景指令，这条不画面板。
         MachineEdits.placeCover(scene, machinePos, Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack(), 10);
         scene.idle(40);
         scene.overlay().showText(70)
-                .text(TEXT_4)
+                .text("Covers can be put on a chosen side as well: a conveyor on top.")
                 .pointAt(util.vector().topOf(machinePos))
                 .attachKeyFrame();
         scene.idle(150);
+
+        // 第五次：只换模型，正面亮起运行中的贴图，配方逻辑一点没动；最后再切回待机。
+        MachineEdits.setWorkingModel(scene, machinePos, true, 10);
+        scene.overlay().showText(70)
+                .text("The model can be switched between working and idle: only the front overlay changes, the recipe logic is left alone.")
+                .pointAt(util.vector().centerOf(machinePos))
+                .attachKeyFrame();
+        scene.idle(90);
+        MachineEdits.setWorkingModel(scene, machinePos, false, 10);
+        scene.idle(30);
         scene.markAsFinished();
     }
 }
