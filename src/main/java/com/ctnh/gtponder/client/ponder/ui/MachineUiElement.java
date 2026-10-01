@@ -39,18 +39,14 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private final Pointing pointing;
     private final BlockPos machinePos;
     private final MachineUiWrites writes;
-    /** 这次摆放挂的配方：入料、成品与进度条都听它的。 */
+    /** 这次摆放挂的配方：入料、成品、进度条与机器的开停机都听它的。 */
     @Nullable
-    private final MachineUiPlacement.RecipeFill recipe;
+    private final RecipeFiller recipe;
 
     private MachineUiPanel panel;
     private boolean failed;
     /** 面板已经演完：时间线不再跑，免得隐藏后还被 tick 到、把自己的写入重放一遍。 */
     private boolean finished;
-    /** 配方已经摊进时间线；回退后重来一次。 */
-    private boolean recipePlanned;
-    /** 进度条的位置，0~1，只在挂了配方时走。 */
-    private double progressValue;
     private int ticksShown;
 
     MachineUiElement(MachineUI ui, Vec3 anchor, Pointing pointing, BlockPos machinePos,
@@ -61,7 +57,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         this.pointing = pointing;
         this.machinePos = machinePos == null ? BlockPos.containing(anchor) : machinePos;
         this.writes = new MachineUiWrites(this.machinePos, writes, fluidWrites);
-        this.recipe = recipe;
+        this.recipe = recipe == null ? null : new RecipeFiller(recipe, this.machinePos);
     }
 
     /**
@@ -73,7 +69,6 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     public void reset(PonderScene scene) {
         restoreMachine();
         writes.dropAdded();
-        recipePlanned = false;
         finished = false;
         panel = null;
     }
@@ -90,11 +85,13 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         finished = true;
     }
 
-    /** 把写进机器的内容还原，并把时间线清零。 */
+    /** 把写进机器的内容、切过的模型状态与时间线一起还原。 */
     private void restoreMachine() {
         writes.restore(panel);
+        if (recipe != null) {
+            recipe.revert(panel);
+        }
         ticksShown = 0;
-        progressValue = 0;
     }
 
     @Override
@@ -108,8 +105,8 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             return;
         }
         current.modularUi().mainGroup.updateScreen();
-        if (recipe != null && recipePlanned) {
-            progressValue = RecipeFiller.progress(recipe, ticksShown);
+        if (recipe != null) {
+            recipe.tick(current, ticksShown);
         }
         writes.tick(current, ticksShown);
     }
@@ -147,8 +144,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             writes.resetMarks();
             if (recipe != null) {
                 writes.dropAdded();
-                RecipeFiller.fill(built, recipe, writes, machinePos, () -> progressValue);
-                recipePlanned = true;
+                recipe.plan(built, writes);
             }
             panel = built;
             return built;

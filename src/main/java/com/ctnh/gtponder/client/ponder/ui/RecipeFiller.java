@@ -4,7 +4,7 @@
 package com.ctnh.gtponder.client.ponder.ui;
 
 import com.ctnh.gtponder.GTPonder;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
+import com.ctnh.gtponder.client.ponder.machine.WorkingModelChange;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
@@ -28,34 +28,48 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.DoubleSupplier;
 
 /**
- * 按配方 id 把面板填起来：入料进输入槽、流体进输入储罐；进度条走完之后，成品落进输出槽与输出储罐。
+ * 一次配方摆放的全部动作：入料进输入槽、流体进输入储罐；进度条走起来就把机器模型切成工作中的样子，
+ * 走完立刻切回待机，成品同时落进输出槽与输出储罐。
  *
  * <p>哪些槽位、储罐是输入，哪些是输出，看 GT 自己打的 {@link IngredientIO} 标签（GT 给 EMI 传配方
  * 用的也是这一套），所以不用猜槽位顺序。
  *
  * <p>机器与配方对不上——不是配方机器、配方 id 不存在、配方类型不属于这台机器、面板里没有对应的槽位——
- * 就在日志里报一行 error，这一段跳过，面板照常画。
+ * 就在日志里报一行 error，这一段跳过，面板照常画，机器也不动。
  */
 final class RecipeFiller {
 
     /** 进度条走满的时长：1 秒。 */
     private static final int PROGRESS_TICKS = 20;
 
-    private RecipeFiller() {}
+    private final MachineUiPlacement.RecipeFill fill;
+    private final BlockPos machinePos;
+    /** 进度条开始时的开机、走完后的关机；两个都记着改之前的样子，还原时按相反顺序退回去。 */
+    private final WorkingModelChange running = new WorkingModelChange(true);
+    private final WorkingModelChange idle = new WorkingModelChange(false);
+    private boolean planned;
+    private boolean runningApplied;
+    private boolean idleApplied;
+    private double progressValue;
 
-    /**
-     * 把配方摊进写入时间线，并把面板里的进度条接到 {@code progress} 上；摊不动（校验不过）就什么都不写。
-     */
-    static void fill(MachineUiPanel panel, MachineUiPlacement.RecipeFill fill, MachineUiWrites writes,
-                     BlockPos machinePos, DoubleSupplier progress) {
+    RecipeFiller(MachineUiPlacement.RecipeFill fill, BlockPos machinePos) {
+        this.fill = fill;
+        this.machinePos = machinePos;
+    }
+
+    /** 校验配方并生成入料/成品写入，同时把面板里的进度条接到自己身上。 */
+    void plan(MachineUiPanel panel, MachineUiWrites writes) {
+        planned = false;
+        runningApplied = false;
+        idleApplied = false;
+        progressValue = 0;
         if (!(panel.machine() instanceof IRecipeLogicMachine recipeMachine)) {
-            error(machinePos, fill, "this machine is not a recipe machine");
+            error("this machine is not a recipe machine");
             return;
         }
-        GTRecipe recipe = find(recipeMachine, fill, machinePos);
+        GTRecipe recipe = find(recipeMachine);
         if (recipe == null) {
             return;
         }
@@ -69,10 +83,10 @@ final class RecipeFiller {
         List<FluidStack> fluidsOut = RecipeHelper.getOutputFluids(recipe);
         if (itemsIn.size() > inputSlots.size() || itemsOut.size() > outputSlots.size() ||
                 fluidsIn.size() > inputTanks.size() || fluidsOut.size() > outputTanks.size()) {
-            error(machinePos, fill, "the panel has " + inputSlots.size() + " in / " + outputSlots.size() +
-                    " out slot(s) and " + inputTanks.size() + " in / " + outputTanks.size() +
-                    " out tank(s), the recipe needs " + itemsIn.size() + " in / " + itemsOut.size() +
-                    " out item(s) and " + fluidsIn.size() + " in / " + fluidsOut.size() + " out fluid(s)");
+            error("the panel has " + inputSlots.size() + " in / " + outputSlots.size() + " out slot(s) and " +
+                    inputTanks.size() + " in / " + outputTanks.size() + " out tank(s), the recipe needs " +
+                    itemsIn.size() + " in / " + itemsOut.size() + " out item(s) and " +
+                    fluidsIn.size() + " in / " + fluidsOut.size() + " out fluid(s)");
             return;
         }
 
@@ -91,38 +105,70 @@ final class RecipeFiller {
             writes.addTank(outputTanks.get(i), fluidsOut.get(i), products);
         }
         // 面板里的进度条改成这条时间线：入料结束后从 0 走到 1。
-        panel.progressWidgets().forEach(widget -> widget.setProgressSupplier(progress));
+        panel.progressWidgets().forEach(widget -> widget.setProgressSupplier(this::progress));
+        planned = true;
         GTPonder.LOGGER.info("GTPonder: filled the machine at {} with recipe {} ({} item in, {} item out, " +
                 "{} fluid in, {} fluid out)", machinePos, fill.recipeId(), itemsIn.size(), itemsOut.size(),
                 fluidsIn.size(), fluidsOut.size());
     }
 
     /**
-     * 进度条位置：入料结束那一刻从 0 开始，走满 {@link #PROGRESS_TICKS} 个 tick 到 1 就停住。
-     * 槽位与进度条同时开始、一起走完，所以直接按摆放的 tick 数算。
+     * 每 tick 一次：进度条从入料结束那一刻开始走；它一开始走就把机器模型切成工作中的样子，
+     * 走到头立刻切回待机。
      */
-    static double progress(MachineUiPlacement.RecipeFill fill, int ticksShown) {
-        int elapsed = ticksShown - (fill.delayTicks() + MachineUiWrites.FILL_TICKS);
-        return elapsed <= 0 ? 0 : Math.min(1, elapsed / (double) PROGRESS_TICKS);
+    void tick(MachineUiPanel panel, int ticksShown) {
+        if (!planned) {
+            return;
+        }
+        int start = fill.delayTicks() + MachineUiWrites.FILL_TICKS;
+        int finish = start + PROGRESS_TICKS;
+        progressValue = ticksShown <= start ? 0 : Math.min(1, (ticksShown - start) / (double) PROGRESS_TICKS);
+        if (ticksShown >= start && !runningApplied) {
+            runningApplied = true;
+            running.apply(panel.machine(), machinePos);
+        }
+        if (ticksShown >= finish && !idleApplied) {
+            idleApplied = true;
+            idle.apply(panel.machine(), machinePos);
+        }
+    }
+
+    /** 面板收起或场景回退：进度条停下，机器模型退回原来的样子。 */
+    void revert(MachineUiPanel panel) {
+        if (panel == null) {
+            return;
+        }
+        if (idleApplied) {
+            idleApplied = false;
+            idle.revert(panel.machine(), machinePos);
+        }
+        if (runningApplied) {
+            runningApplied = false;
+            running.revert(panel.machine(), machinePos);
+        }
+    }
+
+    /** 进度条位置，给面板里的控件每帧问一次。 */
+    private double progress() {
+        return progressValue;
     }
 
     /** 按 id 找配方，并确认它就是这台机器的配方。 */
-    private static @Nullable GTRecipe find(IRecipeLogicMachine machine, MachineUiPlacement.RecipeFill fill,
-                                           BlockPos machinePos) {
+    private @Nullable GTRecipe find(IRecipeLogicMachine machine) {
         ResourceLocation key = ResourceLocation.tryParse(fill.recipeId());
         if (key == null) {
-            error(machinePos, fill, "it is not a valid resource location");
+            error("it is not a valid resource location");
             return null;
         }
         ClientLevel level = Minecraft.getInstance().level;
         RecipeManager manager = level == null ? null : level.getRecipeManager();
         if (manager == null) {
-            error(machinePos, fill, "no recipe manager, is a world loaded?");
+            error("no recipe manager, is a world loaded?");
             return null;
         }
         Recipe<?> recipe = manager.byKey(key).orElse(null);
         if (!(recipe instanceof GTRecipe gtRecipe)) {
-            error(machinePos, fill, "there is no GT recipe with this id");
+            error("there is no GT recipe with this id");
             return null;
         }
         for (GTRecipeType type : machine.getRecipeTypes()) {
@@ -130,7 +176,7 @@ final class RecipeFiller {
                 return gtRecipe;
             }
         }
-        error(machinePos, fill, "this recipe is for " + gtRecipe.getType().registryName + ", not for this machine");
+        error("this recipe is for " + gtRecipe.getType().registryName + ", not for this machine");
         return null;
     }
 
@@ -159,7 +205,7 @@ final class RecipeFiller {
         return widget instanceof IRecipeIngredientSlot slot ? slot.getIngredientIO() : IngredientIO.RENDER_ONLY;
     }
 
-    private static void error(BlockPos machinePos, MachineUiPlacement.RecipeFill fill, String reason) {
+    private void error(String reason) {
         GTPonder.LOGGER.error("GTPonder: cannot fill the machine at {} with recipe {}: {}", machinePos,
                 fill.recipeId(), reason);
     }
