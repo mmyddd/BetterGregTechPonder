@@ -84,7 +84,20 @@ public final class MachineUiInteraction {
         if (value) {
             snapshotSwitches();
         } else {
+            collapseConfigurators();
             restoreSwitches();
+        }
+    }
+
+    /** 关掉模式时把展开中的配置器收起来：不然后面几段里会一直挂着一个电路设置面板。 */
+    private static void collapseConfigurators() {
+        for (View view : FRAME) {
+            ConfiguratorPanel configurators = view.panel().configurators();
+            if (configurators == null) {
+                continue;
+            }
+            configurators.collapseTab();
+            ConfiguratorTabs.syncConfigurators(configurators);
         }
     }
 

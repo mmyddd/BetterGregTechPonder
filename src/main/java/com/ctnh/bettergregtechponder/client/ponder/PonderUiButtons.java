@@ -156,14 +156,12 @@ public final class PonderUiButtons {
             MachineUiInteraction.setEnabled(false);
             return;
         }
-        // 贴好之前先不露脸，免得它停在初始的居中位置（正好压住"思索结束"）。
-        button.visible = placed;
-        // 只有原版整套 UI 才允许点：裁剪版（默认那套）里它是灰的、点不动。
-        if (anyPanel) {
-            button.active = fullPanel;
-            if (!fullPanel) {
-                MachineUiInteraction.setEnabled(false);
-            }
+        // 只有原版整套 UI 才出现：裁剪版（默认那套）里点了也没意义，索性不露脸；
+        // 贴好之前同样不露脸，免得它停在初始的居中位置（正好压住"思索结束"）。
+        button.visible = placed && fullPanel;
+        button.active = fullPanel;
+        if (!fullPanel) {
+            MachineUiInteraction.setEnabled(false);
         }
     }
 
