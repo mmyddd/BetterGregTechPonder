@@ -47,14 +47,27 @@ MachineUIs.showUI(builder, MY_UI)
 需要精确指向点时用 `at(vec)`（机器取该点所在方块）或 `at(vec, pos)`（指向点与机器分开给）。默认只画标题栏、左侧页签和机器页。`showPlayerInventory()`、`showConfigurators()`、`showNavigationButtons()`
 可以把其余部分打开；缩放用 `scale(f)`，或用 `fitToPanel(0.42f)` 按 Ponder 面板宽度自适应。
 
+## 示例场景
+
+`gtponder:input_bus_ui` 用的是 ULV 输入总线：画一遍界面、往 0 号槽位写 64 个草方块、再在顶面贴一条传送带覆盖板。
+
+- 游戏里：JEI 搜 "ULV Input Bus"，悬停按 **W**（或者 `/ponder gtponder:input_bus_ui`）
+- storyboard：`assets/gtponder/ponder/input_bus_ui/common.nbt`（3x3 地板 + (1,1,1) 的 `gtceu:ulv_input_bus`）
+- 本地运行的开发依赖里带了 JEI 与 JustEnoughCharacters（拼音搜索），方便从 JEI 直接开思索
+
 ## 目录
 
 ```
 src/main/java/com/ctnh/gtponder/
 ├── GTPonder.java                     mod 入口
-└── client/ponder/
-    ├── MachineUIs.java                 场景侧入口 showUI
-    └── ui/                             MachineUI / MachineUiPlacement / MachineUiElement / ShowMachineUiInstruction
+└── client/
+    ├── GTPonderClient.java             客户端入口，把场景插件交给 Ponder
+    └── ponder/
+        ├── MachineUIs.java             场景侧入口 showUI
+        ├── GTPonderPonderPlugin.java   场景注册
+        ├── machine/                    时间线上的机器改动：MachineEdit / CoverChange
+        ├── scenes/InputBusUi.java      示例场景
+        └── ui/                         MachineUI / MachineUiPlacement / MachineUiElement / ShowMachineUiInstruction
 ```
 
 ## 许可

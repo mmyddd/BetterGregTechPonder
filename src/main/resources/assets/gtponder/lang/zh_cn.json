@@ -1,3 +1,8 @@
 {
-    "gtponder.tooltip.slot_index": "槽位 %s"
+    "gtponder.tooltip.slot_index": "槽位 %s",
+    "gtponder.ponder.input_bus_ui.header": "ULV 输入总线",
+    "gtponder.ponder.input_bus_ui.title": "输入总线界面",
+    "gtponder.ponder.input_bus_ui.text_1": "面板就是这台机器自己的界面，不含玩家背包。",
+    "gtponder.ponder.input_bus_ui.text_2": "把 64 个草方块写进 0 号槽位，面板显示的就是机器真实库存。",
+    "gtponder.ponder.input_bus_ui.text_3": "覆盖板也能指定面：顶面放一条传送带。"
 }

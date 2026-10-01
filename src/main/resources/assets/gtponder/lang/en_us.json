@@ -1,3 +1,8 @@
 {
-    "gtponder.tooltip.slot_index": "slot %s"
+    "gtponder.tooltip.slot_index": "slot %s",
+    "gtponder.ponder.input_bus_ui.header": "ULV Input Bus",
+    "gtponder.ponder.input_bus_ui.title": "Input Bus UI",
+    "gtponder.ponder.input_bus_ui.text_1": "The panel is the machine's own UI, without the player inventory.",
+    "gtponder.ponder.input_bus_ui.text_2": "64 grass blocks go into slot 0; the panel shows the machine's real inventory.",
+    "gtponder.ponder.input_bus_ui.text_3": "Covers can be put on a chosen side as well: a conveyor on top."
 }

@@ -20,6 +20,8 @@ repositories {
         url = 'https://cursemaven.com/'
         content { includeGroup 'curse.maven' }
     }
+    maven { url = 'https://maven.blamejared.com/' }
+    maven { url = 'https://api.modrinth.com/maven' }
     maven { url = 'https://maven.createmod.net' }
     maven { url = 'https://maven.minecraftforge.net/' }
     maven { url = 'https://maven.architectury.dev' }
@@ -73,4 +75,6 @@ dependencies {
     modRuntimeOnly "dev.architectury:architectury-forge:${architectury_version}"
     modRuntimeOnly "net.createmod.ponder:Ponder-Forge-1.20.1:${ponder_version}"
     modRuntimeOnly "com.simibubi.create:create-1.20.1:${create_version}:slim"
+    modRuntimeOnly "mezz.jei:jei-1.20.1-forge:${jei_version}"
+    modRuntimeOnly "maven.modrinth:justenoughcharacters:${jecharacters_version}"
 }
