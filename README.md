@@ -58,6 +58,7 @@ MachineEdits.placeCover(builder, pos, Direction.NORTH, GTCovers.PUMPS[1], 40);  
 - 游戏里：JEI 搜 "LV Chemical Reactor"，悬停按 **W**（或者 `/ponder gtponder:chemical_reactor_ui`）
 - storyboard：`assets/gtponder/ponder/chemical_reactor_ui/common.nbt`（3x3 地板 + (1,1,1) 的 `gtceu:lv_chemical_reactor`）
 - 本地运行的开发依赖里带了 JEI 与 JustEnoughCharacters（拼音搜索），方便从 JEI 直接开思索
+- 文案由 `gradlew runData` 生成到 `src/generated/resources`，不要在 `src/main/resources` 手写 lang
 - 示例只在开发环境注册（`GTPonderPonderPlugin#exampleScenesEnabled`）：正式 jar 里默认不注册，可用 `-Dgtponder.exampleScenes=true|false` 强制开关
 
 ## 目录
@@ -72,7 +73,7 @@ src/main/java/com/ctnh/gtponder/
         ├── GTPonderPonderPlugin.java   场景注册
         ├── machine/                    机器改动：MachineEdit / CoverChange / MachineEditInstruction / MachineEdits
         ├── scenes/ChemicalReactorUi.java   示例场景
-        └── ui/                         MachineUI / MachineUiPlacement / MachineUiElement / ShowMachineUiInstruction
+        ├── ui/                         MachineUI / MachineUiPlacement / MachineUiElement / ShowMachineUiInstruction
 ```
 
 ## 许可

@@ -5,3 +5,4 @@ out/
 .idea/
 *.iml
 *.log
+src/generated/resources/.cache/

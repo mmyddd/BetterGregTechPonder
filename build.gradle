@@ -10,6 +10,8 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+sourceSets.main.resources.srcDir 'src/generated/resources'
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -47,6 +49,16 @@ legacyForge {
         }
         server {
             server()
+        }
+        data {
+            data()
+            sourceSet = sourceSets.main
+            programArguments.addAll(
+                '--mod', project.mod_id,
+                '--all',
+                '--output', file('src/generated/resources/').getAbsolutePath(),
+                '--existing', file('src/main/resources/').getAbsolutePath()
+            )
         }
     }
 
