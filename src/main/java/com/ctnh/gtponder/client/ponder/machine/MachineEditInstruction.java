@@ -6,7 +6,6 @@ package com.ctnh.gtponder.client.ponder.machine;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 
-import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.foundation.PonderScene;
 import net.createmod.ponder.foundation.instruction.TickingInstruction;
 import net.minecraft.core.BlockPos;
@@ -35,7 +34,7 @@ public class MachineEditInstruction extends TickingInstruction {
         if (!applied && remainingTicks == 0) {
             applied = true;
             edit.apply(machine(scene), machinePos);
-            redrawWorld(scene);
+            MachineEdits.redraw(scene);
         }
     }
 
@@ -44,17 +43,9 @@ public class MachineEditInstruction extends TickingInstruction {
         if (applied) {
             applied = false;
             edit.revert(machine(scene), machinePos);
-            redrawWorld(scene);
+            MachineEdits.redraw(scene);
         }
         super.reset(scene);
-    }
-
-    /**
-     * Ponder 把场景方块的渲染缓存住了（{@code PonderScene#seekToTime} 里也是这么刷的），
-     * 改完机器状态得让它重画一次，否则要等到跳帧或者点关键帧才看得到。
-     */
-    private static void redrawWorld(PonderScene scene) {
-        scene.forEach(WorldSectionElement.class, WorldSectionElement::queueRedraw);
     }
 
     private MetaMachine machine(PonderScene scene) {

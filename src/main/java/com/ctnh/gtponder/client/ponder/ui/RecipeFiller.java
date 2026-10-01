@@ -115,22 +115,28 @@ final class RecipeFiller {
     /**
      * 每 tick 一次：进度条从入料结束那一刻开始走；它一开始走就把机器模型切成工作中的样子，
      * 走到头立刻切回待机。
+     *
+     * @return 这一 tick 是否切了模型——切了就得让场景重画一次，不然画面还是缓存里那张
      */
-    void tick(MachineUiPanel panel, int ticksShown) {
+    boolean tick(MachineUiPanel panel, int ticksShown) {
         if (!planned) {
-            return;
+            return false;
         }
         int start = fill.delayTicks() + MachineUiWrites.FILL_TICKS;
         int finish = start + PROGRESS_TICKS;
         progressValue = ticksShown <= start ? 0 : Math.min(1, (ticksShown - start) / (double) PROGRESS_TICKS);
+        boolean switched = false;
         if (ticksShown >= start && !runningApplied) {
             runningApplied = true;
             running.apply(panel.machine(), machinePos);
+            switched = true;
         }
         if (ticksShown >= finish && !idleApplied) {
             idleApplied = true;
             idle.apply(panel.machine(), machinePos);
+            switched = true;
         }
+        return switched;
     }
 
     /** 面板收起或场景回退：进度条停下，机器模型退回原来的样子。 */

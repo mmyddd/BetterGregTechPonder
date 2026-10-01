@@ -4,6 +4,7 @@
 package com.ctnh.gtponder.client.ponder.ui;
 
 import com.ctnh.gtponder.GTPonder;
+import com.ctnh.gtponder.client.ponder.machine.MachineEdits;
 
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.foundation.PonderScene;
@@ -105,8 +106,9 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             return;
         }
         current.modularUi().mainGroup.updateScreen();
-        if (recipe != null) {
-            recipe.tick(current, ticksShown);
+        // 配方按进度条开关机，改的是机器模型；Ponder 把世界渲染缓存住了，切完得让它重画一次。
+        if (recipe != null && recipe.tick(current, ticksShown)) {
+            MachineEdits.redraw(scene);
         }
         writes.tick(current, ticksShown);
     }

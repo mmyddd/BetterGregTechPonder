@@ -5,7 +5,9 @@ package com.ctnh.gtponder.client.ponder.machine;
 
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 
+import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
+import net.createmod.ponder.foundation.PonderScene;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -22,6 +24,14 @@ import net.minecraft.world.item.ItemStack;
 public final class MachineEdits {
 
     private MachineEdits() {}
+
+    /**
+     * 让场景里的方块重画一次。Ponder 把场景方块的渲染缓存住了（{@code PonderScene#seekToTime} 里也是这么刷的），
+     * 改完机器状态不重画，要等到跳帧或者点关键帧才看得到。
+     */
+    public static void redraw(PonderScene scene) {
+        scene.forEach(WorldSectionElement.class, WorldSectionElement::queueRedraw);
+    }
 
     /** 立刻（下一 tick）执行这段机器改动。 */
     public static void add(SceneBuilder scene, BlockPos machinePos, MachineEdit edit) {
