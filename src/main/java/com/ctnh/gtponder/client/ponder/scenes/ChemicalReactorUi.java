@@ -102,20 +102,20 @@ public class ChemicalReactorUi {
 
         // 第六次：只给一个配方 id，入料、进度条、成品都自动走完。
         MachineUIs.showUI(scene, LV_CHEMICAL_REACTOR_UI).at(machinePos)
-                .recipe("gtceu:chemical_reactor/sodium_sulfide", 10)
+                .recipe("gtceu:chemical_reactor/methane_from_elements", 10)
                 .show(160);
         scene.overlay().showText(80)
-                .text("One recipe id does the rest: the panel fills the inputs, the machine runs while the progress bar moves, then the product drops in.")
+                .text("One recipe id does the rest: the panel fills the inputs, sets the circuit it needs, runs while the bar moves, then drops the product in.")
                 .attachKeyFrame();
         scene.idle(180);
 
         // 第七次：设自动输出口。物品走顶面、流体走南面；南面默认背对镜头，把镜头转过去，看完再转回来。
-        MachineEdits.setItemOutput(scene, machinePos, Direction.UP, 10);
+        MachineEdits.setItemOutput(scene, machinePos, Direction.WEST, 10);
         scene.rotateCameraY(180);
         scene.idle(40);
         MachineEdits.setFluidOutput(scene, machinePos, Direction.SOUTH, 10);
         scene.overlay().showText(70)
-                .text("Auto-output sides are machine state as well: items leave through the top, fluids through the south side.")
+                .text("Auto-output sides are machine state as well: items leave through the west side, fluids through the south side.")
                 .pointAt(util.vector().centerOf(machinePos))
                 .attachKeyFrame();
         scene.idle(150);

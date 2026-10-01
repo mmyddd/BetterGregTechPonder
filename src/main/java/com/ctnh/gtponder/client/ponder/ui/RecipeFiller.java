@@ -5,10 +5,12 @@ package com.ctnh.gtponder.client.ponder.ui;
 
 import com.ctnh.gtponder.GTPonder;
 import com.ctnh.gtponder.client.ponder.machine.WorkingModelChange;
+import com.gregtechceu.gtceu.api.machine.feature.IHasCircuitSlot;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
+import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 
 import com.lowdragmc.lowdraglib.gui.ingredient.IRecipeIngredientSlot;
 import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
@@ -23,10 +25,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.items.ItemStackHandler;
 
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -53,6 +57,10 @@ final class RecipeFiller {
     private boolean runningApplied;
     private boolean idleApplied;
     private double progressValue;
+    /** 配方要的编程电路：进机器的电路槽，不占输入槽。 */
+    private ItemStack circuit = ItemStack.EMPTY;
+    private boolean circuitApplied;
+    private ItemStack previousCircuit = ItemStack.EMPTY;
 
     RecipeFiller(MachineUiPlacement.RecipeFill fill, BlockPos machinePos) {
         this.fill = fill;
@@ -64,7 +72,10 @@ final class RecipeFiller {
         planned = false;
         runningApplied = false;
         idleApplied = false;
+        circuitApplied = false;
         progressValue = 0;
+        circuit = ItemStack.EMPTY;
+        previousCircuit = ItemStack.EMPTY;
         if (!(panel.machine() instanceof IRecipeLogicMachine recipeMachine)) {
             error("this machine is not a recipe machine");
             return;
@@ -77,7 +88,13 @@ final class RecipeFiller {
         List<Integer> outputSlots = slotIndexes(panel.machineSlots(), IngredientIO.OUTPUT);
         List<Integer> inputTanks = tankIndexes(panel.machineTanks(), IngredientIO.INPUT);
         List<Integer> outputTanks = tankIndexes(panel.machineTanks(), IngredientIO.OUTPUT);
-        List<ItemStack> itemsIn = RecipeHelper.getInputItems(recipe);
+        List<ItemStack> itemsIn = new ArrayList<>(RecipeHelper.getInputItems(recipe));
+        // 配方里的编程电路摘出来：它进机器的电路槽，不占输入槽。
+        circuit = takeCircuit(itemsIn);
+        if (!circuit.isEmpty() && !(panel.machine() instanceof IHasCircuitSlot)) {
+            error("the recipe needs circuit " + IntCircuitBehaviour.getCircuitConfiguration(circuit) +
+                    " but this machine has no circuit slot");
+        }
         List<ItemStack> itemsOut = RecipeHelper.getOutputItems(recipe);
         List<FluidStack> fluidsIn = RecipeHelper.getInputFluids(recipe);
         List<FluidStack> fluidsOut = RecipeHelper.getOutputFluids(recipe);
@@ -126,6 +143,10 @@ final class RecipeFiller {
         int finish = start + PROGRESS_TICKS;
         progressValue = ticksShown <= start ? 0 : Math.min(1, (ticksShown - start) / (double) PROGRESS_TICKS);
         boolean switched = false;
+        if (!circuit.isEmpty() && ticksShown >= fill.delayTicks() && !circuitApplied) {
+            circuitApplied = true;
+            applyCircuit(panel);
+        }
         if (ticksShown >= start && !runningApplied) {
             runningApplied = true;
             running.apply(panel.machine(), machinePos);
@@ -139,10 +160,22 @@ final class RecipeFiller {
         return switched;
     }
 
-    /** 面板收起或场景回退：进度条停下，机器模型退回原来的样子。 */
+    /** 面板收起或场景回退：进度条停下，电路槽与机器模型退回原来的样子。 */
     void revert(MachineUiPanel panel) {
         if (panel == null) {
             return;
+        }
+        if (circuitApplied) {
+            circuitApplied = false;
+            if (panel.machine() instanceof IHasCircuitSlot holder) {
+                try {
+                    holder.getCircuitInventory().storage.setStackInSlot(0, previousCircuit);
+                } catch (Throwable t) {
+                    GTPonder.LOGGER.error("GTPonder: restoring the circuit of the machine at {} threw", machinePos,
+                            t);
+                }
+            }
+            previousCircuit = ItemStack.EMPTY;
         }
         if (idleApplied) {
             idleApplied = false;
@@ -152,6 +185,32 @@ final class RecipeFiller {
             runningApplied = false;
             running.revert(panel.machine(), machinePos);
         }
+    }
+
+    /** 把配方要的电路写进机器的电路槽；面板下方那组编码设置 UI 读的就是这个槽。 */
+    private void applyCircuit(MachineUiPanel panel) {
+        if (!(panel.machine() instanceof IHasCircuitSlot holder)) {
+            return;
+        }
+        try {
+            ItemStackHandler slot = holder.getCircuitInventory().storage;
+            previousCircuit = slot.getStackInSlot(0).copy();
+            slot.setStackInSlot(0, circuit.copy());
+        } catch (Throwable t) {
+            GTPonder.LOGGER.error("GTPonder: setting the circuit of the machine at {} threw", machinePos, t);
+        }
+    }
+
+    /** 把配方的编程电路从物品输入里摘出来；一张配方最多一个电路。 */
+    private static ItemStack takeCircuit(List<ItemStack> items) {
+        for (Iterator<ItemStack> iterator = items.iterator(); iterator.hasNext(); ) {
+            ItemStack stack = iterator.next();
+            if (IntCircuitBehaviour.isIntegratedCircuit(stack)) {
+                iterator.remove();
+                return stack.copy();
+            }
+        }
+        return ItemStack.EMPTY;
     }
 
     /** 进度条位置，给面板里的控件每帧问一次。 */
