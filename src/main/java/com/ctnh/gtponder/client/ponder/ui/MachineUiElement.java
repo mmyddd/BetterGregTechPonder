@@ -19,9 +19,11 @@ import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.lowdraglib.gui.widget.custom.PlayerInventoryWidget;
 
 import net.createmod.catnip.math.Pointing;
+import net.createmod.ponder.foundation.PonderIndex;
 import net.createmod.ponder.foundation.PonderScene;
 import net.createmod.ponder.foundation.element.AnimatedOverlayElementBase;
 import net.createmod.ponder.foundation.ui.PonderUI;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
@@ -61,6 +63,8 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private static final int DIVOT_SPAN = 10;
     /** 面板离屏幕边缘至少留出的像素。 */
     private static final int MARGIN = 6;
+    /** 编辑模式下贴在槽位 tooltip 首行的序号，参数是机器里的真实槽位序号。 */
+    private static final String SLOT_INDEX_KEY = "gtponder.tooltip.slot_index";
 
     private final MachineUI ui;
     private final Vec3 anchor;
@@ -208,15 +212,30 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
                                 float screenY) {
         try {
             Widget hovered = current.modularUi().mainGroup.getHoverElement(uiMouseX, uiMouseY);
-            List<Component> lines = tooltipFor(hovered, uiMouseX, uiMouseY);
+            List<Component> lines = new ArrayList<>(tooltipFor(hovered, uiMouseX, uiMouseY));
             if (lines.isEmpty()) {
                 return;
             }
+            appendSlotIndex(current, hovered, lines);
             graphics.renderTooltip(Minecraft.getInstance().font, lines, Optional.empty(), (int) screenX,
                     (int) screenY);
         } catch (Throwable t) {
             // 物品 tooltip 可能来自任意模组，出错不该拖垮整个面板。
             GTPonder.LOGGER.debug("MachineUI tooltip failed", t);
+        }
+    }
+
+    /**
+     * Ponder 的编辑模式（{@code PonderConfig.Client().editingMode}）打开时，把悬停槽位在机器里的真实序号
+     * 加在 tooltip 第一行——写场景时对着它填 {@code slot(index)}。玩家背包的槽位不算在内。
+     */
+    private static void appendSlotIndex(Resolved current, Widget hovered, List<Component> lines) {
+        if (!(hovered instanceof SlotWidget slot) || !PonderIndex.editingModeActive()) {
+            return;
+        }
+        int index = current.machineSlots().indexOf(slot);
+        if (index >= 0) {
+            lines.add(0, Component.translatable(SLOT_INDEX_KEY, index).withStyle(ChatFormatting.GRAY));
         }
     }
 
