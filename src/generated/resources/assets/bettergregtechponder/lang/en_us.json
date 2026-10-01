@@ -7,6 +7,7 @@
   "bettergregtechponder.ponder.chemical_reactor_ui.text_5": "The model can be switched between working and idle: only the front overlay changes, the recipe logic is left alone.",
   "bettergregtechponder.ponder.chemical_reactor_ui.text_6": "One recipe id does the rest: the panel fills the inputs, sets the circuit it needs, runs while the bar moves, then drops the product in.",
   "bettergregtechponder.ponder.chemical_reactor_ui.text_7": "Auto-output sides are machine state as well: items leave through the west side, fluids through the south side.",
+  "bettergregtechponder.ponder.chemical_reactor_ui.text_8": "showFullUI() draws GT's whole UI, and each switch in that configurator column can be boxed on its own: power, auto-output, the circuit setting.",
   "bettergregtechponder.tooltip.slot_index": "slot %s",
   "bettergregtechponder.tooltip.tank_index": "tank %s"
 }

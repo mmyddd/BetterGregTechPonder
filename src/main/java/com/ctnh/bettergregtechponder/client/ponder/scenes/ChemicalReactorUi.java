@@ -37,6 +37,11 @@ public class ChemicalReactorUi {
     private static final MachineUI LV_CHEMICAL_REACTOR_UI = MachineUI.of(GTMachines.CHEMICAL_REACTOR[GTValues.LV])
             .scale(0.6f);
 
+    /** 原版整套：配置器面板、提示面板、玩家背包都画；配置器那一列里的开关才框得到。 */
+    private static final MachineUI FULL_CHEMICAL_REACTOR_UI = MachineUI.of(GTMachines.CHEMICAL_REACTOR[GTValues.LV])
+            .showFullUI()
+            .scale(0.6f);
+
     private ChemicalReactorUi() {}
 
     public static void common(SceneBuilder scene, SceneBuildingUtil util) {
@@ -124,6 +129,17 @@ public class ChemicalReactorUi {
         scene.idle(150);
         scene.rotateCameraY(-180);
         scene.idle(30);
+
+        // 第八次：原版整套界面，顺便把配置器那一列里的开关逐个框出来。
+        MachineUIs.showUI(scene, FULL_CHEMICAL_REACTOR_UI).at(machinePos)
+                .outlinePowerToggle(20)
+                .outlineAutoOutput(35)
+                .outlineCircuitButton(50)
+                .show(160);
+        scene.overlay().showText(80)
+                .text("showFullUI() draws GT's whole UI, and each switch in that configurator column can be boxed on its own: power, auto-output, the circuit setting.")
+                .attachKeyFrame();
+        scene.idle(180);
         scene.markAsFinished();
     }
 }
