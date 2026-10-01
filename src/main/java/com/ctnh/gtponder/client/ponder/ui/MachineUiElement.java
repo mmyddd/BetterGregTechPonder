@@ -86,6 +86,8 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
 
     private Resolved resolved;
     private boolean failed;
+    /** 面板已经演完：时间线不再跑，免得隐藏后还被 tick 到、把自己的写入重放一遍。 */
+    private boolean finished;
     private int ticksShown;
 
     MachineUiElement(MachineUI ui, Vec3 anchor, Pointing pointing, BlockPos machinePos,
@@ -110,7 +112,20 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     @Override
     public void reset(PonderScene scene) {
         restoreMachine();
+        finished = false;
         resolved = null;
+    }
+
+    /**
+     * 面板演完（{@link ShowMachineUiInstruction#hide}）时调用：还原写入，并停掉时间线。
+     *
+     * <p>必须停：{@code PonderScene.tick()} 会 tick <strong>所有</strong>元素（包括已经隐藏的），
+     * 而 {@link #restoreMachine()} 把 {@code ticksShown} 和写入标记清零了，元素会以为自己是刚出场，
+     * 于是把这一段的时间线又跑一遍——表现就是「下一段面板里莫名其妙又出现了上一段的物品」。
+     */
+    void finish() {
+        restoreMachine();
+        finished = true;
     }
 
     /**
@@ -157,7 +172,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
 
     @Override
     public void tick(PonderScene scene) {
-        if (failed) {
+        if (failed || finished) {
             return;
         }
         ticksShown++;
@@ -172,7 +187,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
 
     @Override
     public void render(PonderScene scene, PonderUI screen, GuiGraphics graphics, float partialTicks, float fade) {
-        if (failed || fade < MIN_FADE) {
+        if (failed || finished || fade < MIN_FADE) {
             return;
         }
         Resolved current = resolve(scene);
