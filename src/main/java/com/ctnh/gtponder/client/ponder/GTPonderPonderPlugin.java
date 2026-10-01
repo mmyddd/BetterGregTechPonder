@@ -18,8 +18,8 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 public class GTPonderPonderPlugin implements PonderPlugin {
 
     /**
-     * 示例场景的开关。默认开发环境开、正式环境关——正式 jar 里 {@link InputBusUi} 不会被注册，
-     * 免得把使用者的 ULV 输入总线思索顶掉。想强制打开或关掉，加 JVM 参数
+     * 示例场景的开关。默认开发环境开、正式环境关——正式 jar 里 {@link ChemicalReactorUi} 不会被注册，
+     * 免得占掉使用者自己给 LV 化学反应釜写的思索。想强制打开或关掉，加 JVM 参数
      * {@code -Dgtponder.exampleScenes=true|false}。
      */
     public static final String EXAMPLE_SCENES_PROPERTY = "gtponder.exampleScenes";

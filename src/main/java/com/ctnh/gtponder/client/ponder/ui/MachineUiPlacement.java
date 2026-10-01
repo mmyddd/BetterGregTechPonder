@@ -58,7 +58,7 @@ public final class MachineUiPlacement {
         return this;
     }
 
-    /** 第 index 个机器槽位，顺序与 UI 里槽位的排列一致，也就是实机 UI 里的真实槽位序号。 */
+    /** 第 index 个机器槽位，顺序与 UI 里槽位的排列一致，也就是游戏里这台机器的真实槽位序号。 */
     public SlotTarget slot(int index) {
         return new SlotTarget(index);
     }

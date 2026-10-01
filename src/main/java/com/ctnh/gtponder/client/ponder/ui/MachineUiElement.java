@@ -47,7 +47,7 @@ import java.util.Optional;
 
 /**
  * 把机器真实的 {@link ModularUI} 画进思索场景的叠加层元素：面板画成 Ponder 的 speech box，
- * 指针尖指向场景里的锚点，并按时间线把物品写进指定槽位。
+ * 指针尖指向场景里的锚点，并按时间线把物品与流体写进指定槽位、储罐。
  *
  * <p>
  * 机器实例在渲染/运行期按坐标解析，不跨重播持有；场景重播（{@code PonderScene#begin()} 会重建
@@ -81,7 +81,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private final ItemStack[] originals;
     private final List<MachineUiPlacement.FluidWrite> fluidWrites;
     private final boolean[] fluidWritten;
-    /** 各写入储罐在首次写入前的内容，回退时按它还原。 */
+    /** 各写入储罐在首次写入前的流体，回退时按它还原。 */
     private final FluidStack[] fluidOriginals;
 
     private Resolved resolved;
@@ -431,7 +431,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         }
     }
 
-    /** 写入控件出错不该把游戏带走：记一行日志，这条写入就算做完。 */
+    /** 写入控件出错不该让游戏崩掉：记一行日志，这条写入就算做完。 */
     private void writeTank(Widget tank, FluidStack stack, int index) {
         try {
             setTankFluid(tank, stack);
@@ -561,7 +561,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
 
     /**
      * 面板边界取根容器与当前可见子控件的并集。fancy UI 的标题栏在根容器上方、页签在它左侧，
-     * 只算根容器矩形会把这两块落在 speech box 外面。
+     * 只算根容器矩形，这两块就会落在 speech box 外面。
      */
     private static Bounds measure(Widget root) {
         int minX = root.getPositionX();

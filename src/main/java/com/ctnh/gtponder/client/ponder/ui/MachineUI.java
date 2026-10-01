@@ -10,7 +10,7 @@ import net.createmod.ponder.api.scene.SceneBuilder;
 import net.minecraft.world.level.block.Block;
 
 /**
- * 一个可复用的机器界面描述对象：在模块里定义一次，在任意思索场景里重复摆放。
+ * 一个可复用的机器界面描述对象：定义一次，在任意思索场景里重复摆放。
  *
  * <p>
  * 默认只画标题栏、左侧页签和机器页；玩家背包、配置器面板，以及标题栏上的返回与翻页按钮都不画。
@@ -27,7 +27,7 @@ import net.minecraft.world.level.block.Block;
  * 使用侧：
  *
  * <pre>{@code
- * scene.showUI(LV_INPUT_BUS_UI).at(anchor).forMachine(pos)
+ * MachineUIs.showUI(scene, LV_INPUT_BUS_UI).at(busPos)
  *         .slot(0).withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
  *         .show(200);
  * }</pre>

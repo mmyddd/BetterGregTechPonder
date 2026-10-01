@@ -9,10 +9,10 @@ import com.ctnh.gtponder.client.ponder.ui.MachineUI;
 import com.ctnh.gtponder.client.ponder.ui.MachineUiPlacement;
 
 /**
- * 场景侧入口，等价于 CTNH 的 {@code CTNHPonderSceneBuilder#showUI}：
+ * 场景侧入口，等价于 CTNH-Lib 的 {@code CTNHPonderSceneBuilder#showUI(MachineUI)}：
  *
  * <pre>{@code
- * MachineUIs.showUI(builder, LV_INPUT_BUS_UI).at(anchor).forMachine(pos)
+ * MachineUIs.showUI(builder, LV_INPUT_BUS_UI).at(busPos)
  *         .slot(0).withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
  *         .show(200);
  * }</pre>

@@ -6,7 +6,7 @@ package com.ctnh.gtponder.client.ponder.ui;
 import net.createmod.ponder.foundation.PonderScene;
 import net.createmod.ponder.foundation.instruction.FadeInOutInstruction;
 
-/** 与 {@code ShowInputInstruction} 同构：展示时把元素挂进场景，隐藏时只是不再可见。 */
+/** 与 {@code ShowInputInstruction} 同构：展示时把元素挂进场景，隐藏时做收尾，还原机器并停掉时间线。 */
 public class ShowMachineUiInstruction extends FadeInOutInstruction {
 
     private final MachineUiElement element;
