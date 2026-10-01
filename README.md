@@ -5,7 +5,7 @@
 - 针对官方 GTCEu 编译（`curse.maven:gregtechceu-modern-890405:7917773`），不依赖任何分支改动
 - 纯客户端库：服务端加载本 mod 不会触碰任何绘制类
 - 面板用 Ponder 自己的 speech box 画，指针尖指向场景里的坐标
-- 槽位序号与实机 UI 一致；放入时数量从 0 在 1 秒内叠到目标值
+- 槽位序号与实机 UI 一致；物品数量与储罐流体量都从 0 在 1 秒内涨到目标值
 - 往机器上贴覆盖板是独立的场景指令（改机器状态），和界面无关；机器不支持时在日志里报错
 - 打开 Ponder 的编辑模式（`ponder-client.toml` 里的 `editingMode`）后，鼠标停在槽位上，tooltip 首行会显示该槽位在机器里的真实序号
 
@@ -29,8 +29,12 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
         .at(pos)                          // 指向这台机器：尾巴尖落在方块中心，面板也画它
         .pointing(Pointing.DOWN)          // 面板落在指向点的哪一侧，默认 DOWN
         .slot(0).withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
+        .tank(0).withFluid(new FluidStack(Fluids.WATER, 1000), 20)   // 储罐同理
         .show(200);
 ```
+
+`slot(index)` 对应 UI 里第 index 个物品槽，`tank(index)` 对应第 index 个储罐；两个参数都是「面板出现后第几个 tick 开始写入」，
+写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。
 
 覆盖板是改机器状态，用独立的场景指令，不挂在界面上：
 
@@ -45,11 +49,11 @@ MachineEdits.placeCover(builder, pos, Direction.NORTH, GTCovers.PUMPS[1], 40);  
 
 ## 示例场景
 
-`gtponder:input_bus_ui` 用的是 ULV 输入总线：第一步只画界面，第二步往 0 号槽位写 64 个草方块，
-第三步不画面板、直接用场景指令在顶面贴一条传送带覆盖板（演示机器改动与界面无关）。
+`gtponder:chemical_reactor_ui` 用的是 LV 化学反应釜：第一步只画界面，第二步往 0 号槽位写 64 个草方块，
+第三步往 0 号储罐灌 1000 mB 水，第四步不画面板、直接用场景指令在顶面贴一条传送带覆盖板（演示机器改动与界面无关）。
 
-- 游戏里：JEI 搜 "ULV Input Bus"，悬停按 **W**（或者 `/ponder gtponder:input_bus_ui`）
-- storyboard：`assets/gtponder/ponder/input_bus_ui/common.nbt`（3x3 地板 + (1,1,1) 的 `gtceu:ulv_input_bus`）
+- 游戏里：JEI 搜 "LV Chemical Reactor"，悬停按 **W**（或者 `/ponder gtponder:chemical_reactor_ui`）
+- storyboard：`assets/gtponder/ponder/chemical_reactor_ui/common.nbt`（3x3 地板 + (1,1,1) 的 `gtceu:lv_chemical_reactor`）
 - 本地运行的开发依赖里带了 JEI 与 JustEnoughCharacters（拼音搜索），方便从 JEI 直接开思索
 - 示例只在开发环境注册（`GTPonderPonderPlugin#exampleScenesEnabled`）：正式 jar 里默认不注册，可用 `-Dgtponder.exampleScenes=true|false` 强制开关
 
@@ -64,7 +68,7 @@ src/main/java/com/ctnh/gtponder/
         ├── MachineUIs.java             场景侧入口 showUI
         ├── GTPonderPonderPlugin.java   场景注册
         ├── machine/                    机器改动：MachineEdit / CoverChange / MachineEditInstruction / MachineEdits
-        ├── scenes/InputBusUi.java      示例场景
+        ├── scenes/ChemicalReactorUi.java   示例场景
         └── ui/                         MachineUI / MachineUiPlacement / MachineUiElement / ShowMachineUiInstruction
 ```
 

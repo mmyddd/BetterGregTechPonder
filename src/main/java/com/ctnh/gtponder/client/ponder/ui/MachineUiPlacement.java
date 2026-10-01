@@ -8,6 +8,7 @@ import net.createmod.ponder.api.scene.SceneBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.fluids.FluidStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,7 @@ public final class MachineUiPlacement {
     private final SceneBuilder builder;
     private final MachineUI ui;
     private final List<SlotWrite> writes = new ArrayList<>();
+    private final List<FluidWrite> fluids = new ArrayList<>();
     private Vec3 anchor = Vec3.ZERO;
     private Pointing pointing = Pointing.DOWN;
     private BlockPos machinePos;
@@ -61,10 +63,36 @@ public final class MachineUiPlacement {
         return new SlotTarget(index);
     }
 
+    /** 第 index 个机器储罐，顺序与 UI 里 tank 控件的排列一致。 */
+    public TankTarget tank(int index) {
+        return new TankTarget(index);
+    }
+
     /** 按给定 tick 数展示面板；此前登记的槽位写入按各自延迟执行。 */
     public void show(int ticks) {
-        MachineUiElement element = new MachineUiElement(ui, anchor, pointing, machinePos, List.copyOf(writes));
+        MachineUiElement element = new MachineUiElement(ui, anchor, pointing, machinePos, List.copyOf(writes),
+                List.copyOf(fluids));
         builder.addInstruction(new ShowMachineUiInstruction(element, ticks));
+    }
+
+    public final class TankTarget {
+
+        private final int index;
+
+        private TankTarget(int index) {
+            this.index = index;
+        }
+
+        /** 面板出现的同一 tick 就把流体灌进该储罐。 */
+        public MachineUiPlacement withFluid(FluidStack stack) {
+            return withFluid(stack, 0);
+        }
+
+        /** 面板出现 delayTicks 个 tick 后开始灌注：数量从 0 在 1 秒内涨到目标值。 */
+        public MachineUiPlacement withFluid(FluidStack stack, int delayTicks) {
+            fluids.add(new FluidWrite(index, stack.copy(), Math.max(0, delayTicks)));
+            return MachineUiPlacement.this;
+        }
     }
 
     public final class SlotTarget {
@@ -88,4 +116,6 @@ public final class MachineUiPlacement {
     }
 
     record SlotWrite(int index, ItemStack stack, int delayTicks) {}
+
+    record FluidWrite(int index, FluidStack stack, int delayTicks) {}
 }

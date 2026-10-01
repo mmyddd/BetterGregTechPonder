@@ -17,6 +17,7 @@ import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
 import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.lowdraglib.gui.widget.custom.PlayerInventoryWidget;
+import com.lowdragmc.lowdraglib.side.fluid.forge.FluidHelperImpl;
 
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.foundation.PonderIndex;
@@ -33,8 +34,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.fluids.FluidStack;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+
+import org.jetbrains.annotations.Nullable;
 import com.ctnh.gtponder.GTPonder;
 
 import java.util.ArrayList;
@@ -64,6 +68,8 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private static final int MARGIN = 6;
     /** 编辑模式下贴在槽位 tooltip 首行的序号，参数是机器里的真实槽位序号。 */
     private static final String SLOT_INDEX_KEY = "gtponder.tooltip.slot_index";
+    /** 同上，储罐的序号。 */
+    private static final String TANK_INDEX_KEY = "gtponder.tooltip.tank_index";
 
     private final MachineUI ui;
     private final Vec3 anchor;
@@ -73,13 +79,17 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private final boolean[] written;
     /** 各写入槽位在首次写入前的内容，回退时按它还原。 */
     private final ItemStack[] originals;
+    private final List<MachineUiPlacement.FluidWrite> fluidWrites;
+    private final boolean[] fluidWritten;
+    /** 各写入储罐在首次写入前的内容，回退时按它还原。 */
+    private final FluidStack[] fluidOriginals;
 
     private Resolved resolved;
     private boolean failed;
     private int ticksShown;
 
     MachineUiElement(MachineUI ui, Vec3 anchor, Pointing pointing, BlockPos machinePos,
-                     List<MachineUiPlacement.SlotWrite> writes) {
+                     List<MachineUiPlacement.SlotWrite> writes, List<MachineUiPlacement.FluidWrite> fluidWrites) {
         this.ui = ui;
         this.anchor = anchor;
         this.pointing = pointing;
@@ -87,6 +97,9 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         this.writes = writes;
         this.written = new boolean[writes.size()];
         this.originals = new ItemStack[writes.size()];
+        this.fluidWrites = fluidWrites;
+        this.fluidWritten = new boolean[fluidWrites.size()];
+        this.fluidOriginals = new FluidStack[fluidWrites.size()];
     }
 
     /**
@@ -106,6 +119,15 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             }
             written[i] = false;
         }
+        for (int i = 0; i < fluidWritten.length; i++) {
+            if (fluidWritten[i] && fluidOriginals[i] != null && resolved != null) {
+                Widget tank = tankAt(resolved, fluidWrites.get(i).index());
+                if (tank != null) {
+                    setTankFluid(tank, fluidOriginals[i].copy());
+                }
+            }
+            fluidWritten[i] = false;
+        }
         resolved = null;
     }
 
@@ -121,6 +143,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         }
         current.modularUi().mainGroup.updateScreen();
         applyScheduledWrites(current);
+        applyScheduledFluidWrites(current);
     }
 
     @Override
@@ -225,16 +248,31 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
      * 加在 tooltip 第一行——写场景时对着它填 {@code slot(index)}。玩家背包的槽位不算在内。
      */
     private static void appendSlotIndex(Resolved current, Widget hovered, List<Component> lines) {
-        if (!(hovered instanceof SlotWidget slot) || !PonderIndex.editingModeActive()) {
+        if (!PonderIndex.editingModeActive()) {
             return;
         }
-        int index = current.machineSlots().indexOf(slot);
-        if (index >= 0) {
-            lines.add(0, Component.translatable(SLOT_INDEX_KEY, index).withStyle(ChatFormatting.GRAY));
+        if (hovered instanceof SlotWidget slot) {
+            int index = current.machineSlots().indexOf(slot);
+            if (index >= 0) {
+                lines.add(0, Component.translatable(SLOT_INDEX_KEY, index).withStyle(ChatFormatting.GRAY));
+            }
+            return;
+        }
+        if (isTank(hovered)) {
+            int index = current.machineTanks().indexOf(hovered);
+            if (index >= 0) {
+                lines.add(0, Component.translatable(TANK_INDEX_KEY, index).withStyle(ChatFormatting.GRAY));
+            }
         }
     }
 
     private static List<Component> tooltipFor(Widget hovered, float mouseX, float mouseY) {
+        if (hovered instanceof com.gregtechceu.gtceu.api.gui.widget.TankWidget tank) {
+            return tank.getFullTooltipTexts();
+        }
+        if (hovered instanceof com.lowdragmc.lowdraglib.gui.widget.TankWidget tank) {
+            return tank.getFullTooltipTexts();
+        }
         if (hovered instanceof SlotWidget slot) {
             // 含 LargeStackSlotWidget 的「64 / 256」数量行。
             return slot.getFullTooltipTexts();
@@ -278,6 +316,75 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             ItemStack partial = write.stack().copy();
             partial.setCount(count);
             slot.setItem(partial);
+        }
+    }
+
+    /** 储罐写入时间线：与槽位同理，让数量在 {@link #FILL_TICKS} 个 tick 内从 0 涨到目标值。 */
+    private void applyScheduledFluidWrites(Resolved current) {
+        for (int i = 0; i < fluidWrites.size(); i++) {
+            if (fluidWritten[i]) {
+                continue;
+            }
+            MachineUiPlacement.FluidWrite write = fluidWrites.get(i);
+            int elapsed = ticksShown - write.delayTicks();
+            if (elapsed < 0) {
+                continue;
+            }
+            Widget tank = tankAt(current, write.index());
+            if (tank == null) {
+                continue;
+            }
+            if (fluidOriginals[i] == null) {
+                FluidStack currentFluid = tankFluid(tank);
+                fluidOriginals[i] = currentFluid == null ? FluidStack.EMPTY : currentFluid.copy();
+            }
+            int target = write.stack().getAmount();
+            if (elapsed >= FILL_TICKS) {
+                setTankFluid(tank, write.stack().copy());
+                fluidWritten[i] = true;
+                continue;
+            }
+            int amount = (int) Math.round(target * (elapsed / (double) FILL_TICKS));
+            if (amount <= 0) {
+                continue;
+            }
+            FluidStack partial = write.stack().copy();
+            partial.setAmount(amount);
+            setTankFluid(tank, partial);
+        }
+    }
+
+    private static Widget tankAt(Resolved current, int index) {
+        if (index < 0 || index >= current.machineTanks().size()) {
+            return null;
+        }
+        return current.machineTanks().get(index);
+    }
+
+    /**
+     * 机器 UI 里的流体槽：GT 的 TankWidget 和 LDLib 的 TankWidget 是两份实现，都要认。
+     * LDLib 那份用的是自己的 {@code com.lowdragmc.lowdraglib.side.fluid.FluidStack}，走 FluidHelperImpl 转换。
+     */
+    private static boolean isTank(Widget widget) {
+        return widget instanceof com.gregtechceu.gtceu.api.gui.widget.TankWidget ||
+                widget instanceof com.lowdragmc.lowdraglib.gui.widget.TankWidget;
+    }
+
+    private static @Nullable FluidStack tankFluid(Widget tank) {
+        if (tank instanceof com.gregtechceu.gtceu.api.gui.widget.TankWidget gtTank) {
+            return gtTank.getFluid();
+        }
+        if (tank instanceof com.lowdragmc.lowdraglib.gui.widget.TankWidget ldlTank) {
+            return FluidHelperImpl.toFluidStack(ldlTank.getFluid());
+        }
+        return null;
+    }
+
+    private static void setTankFluid(Widget tank, FluidStack stack) {
+        if (tank instanceof com.gregtechceu.gtceu.api.gui.widget.TankWidget gtTank) {
+            gtTank.setFluid(stack);
+        } else if (tank instanceof com.lowdragmc.lowdraglib.gui.widget.TankWidget ldlTank) {
+            ldlTank.setFluid(FluidHelperImpl.toFluidStack(stack));
         }
     }
 
@@ -341,10 +448,12 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             applyFancyChrome(fancy);
         }
         List<SlotWidget> slots = collectMachineSlots(modularUi);
+        List<Widget> tanks = collectMachineTanks(modularUi);
         Bounds bounds = measure(root);
-        GTPonder.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s)", machinePos,
-                bounds.width(), bounds.height(), bounds.x(), bounds.y(), slots.size());
-        return new Resolved(blockEntity, modularUi, bounds.x(), bounds.y(), bounds.width(), bounds.height(), slots);
+        GTPonder.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s), {} tank(s)", machinePos,
+                bounds.width(), bounds.height(), bounds.x(), bounds.y(), slots.size(), tanks.size());
+        return new Resolved(blockEntity, modularUi, bounds.x(), bounds.y(), bounds.width(), bounds.height(), slots,
+                tanks);
     }
 
     /**
@@ -430,6 +539,16 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         return modularUi.mainGroup;
     }
 
+    private static List<Widget> collectMachineTanks(ModularUI modularUi) {
+        List<Widget> tanks = new ArrayList<>();
+        for (Widget widget : modularUi.mainGroup.getContainedWidgets(true)) {
+            if (isTank(widget) && widget.isVisible()) {
+                tanks.add(widget);
+            }
+        }
+        return tanks;
+    }
+
     private static List<SlotWidget> collectMachineSlots(ModularUI modularUi) {
         List<SlotWidget> slots = new ArrayList<>();
         for (Widget widget : modularUi.mainGroup.getContainedWidgets(true)) {
@@ -451,5 +570,5 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private record Bounds(int x, int y, int width, int height) {}
 
     private record Resolved(BlockEntity blockEntity, ModularUI modularUi, int originX, int originY, int width,
-                            int height, List<SlotWidget> machineSlots) {}
+                            int height, List<SlotWidget> machineSlots, List<Widget> machineTanks) {}
 }

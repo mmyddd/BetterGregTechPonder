@@ -4,7 +4,7 @@
 package com.ctnh.gtponder.client.ponder;
 
 import com.ctnh.gtponder.GTPonder;
-import com.ctnh.gtponder.client.ponder.scenes.InputBusUi;
+import com.ctnh.gtponder.client.ponder.scenes.ChemicalReactorUi;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.common.data.GTMachines;
@@ -34,8 +34,8 @@ public class GTPonderPonderPlugin implements PonderPlugin {
         if (!exampleScenesEnabled()) {
             return;
         }
-        helper.forComponents(GTMachines.ITEM_IMPORT_BUS[GTValues.ULV].getId())
-                .addStoryBoard("input_bus_ui/common", InputBusUi::common);
+        helper.forComponents(GTMachines.CHEMICAL_REACTOR[GTValues.LV].getId())
+                .addStoryBoard("chemical_reactor_ui/common", ChemicalReactorUi::common);
     }
 
     private static boolean exampleScenesEnabled() {
