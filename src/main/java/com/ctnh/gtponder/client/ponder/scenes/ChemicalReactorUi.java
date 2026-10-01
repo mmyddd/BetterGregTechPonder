@@ -58,9 +58,11 @@ public class ChemicalReactorUi {
         MachineUIs.showUI(scene, LV_CHEMICAL_REACTOR_UI).at(machinePos)
                 .slot(1)
                 .withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
+                .slot(2)
+                .withItem(new ItemStack(Items.GLASS, 64), 20)
                 .show(160);
         scene.overlay().showText(80)
-                .text("64 grass blocks go into slot 0; the panel shows the machine's real inventory.")
+                .text("64 blocks go into slot 1/2; the panel shows the machine's real inventory.")
                 .attachKeyFrame();
         scene.idle(180);
 
