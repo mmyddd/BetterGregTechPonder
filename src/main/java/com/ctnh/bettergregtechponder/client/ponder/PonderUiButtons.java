@@ -156,9 +156,8 @@ public final class PonderUiButtons {
             MachineUiInteraction.setEnabled(false);
             return;
         }
-        // 只有原版整套 UI 才出现：裁剪版（默认那套）里点了也没意义，索性不露脸；
-        // 贴好之前同样不露脸，免得它停在初始的居中位置（正好压住"思索结束"）。
-        button.visible = placed && fullPanel;
+        // 显示与否交给 afterRender：只有那里才知道这一帧能不能贴到锚点旁边。
+        // 这里只处理「不能点就关模式」这一条。
         button.active = fullPanel;
         if (!fullPanel) {
             MachineUiInteraction.setEnabled(false);
@@ -171,9 +170,14 @@ public final class PonderUiButtons {
      */
     public static void afterRender(PonderUI ponder, GuiGraphics graphics, int mouseX, int mouseY) {
         frameHandled = false;
-        if (button != null && !placed && MachineUiInteraction.hasPanel() && place(ponder)) {
-            placed = true;
-            button.visible = true;
+        // 每帧都重新贴一次：锚点（显示方块名称）在场景切换那几帧可能还没稳定，
+        // 只贴一次会把按钮留在初始的居中位置（正好压住「思索结束」）。
+        if (button != null && MachineUiInteraction.hasFullPanel()) {
+            placed = place(ponder);
+            button.visible = placed;
+        } else if (button != null) {
+            placed = false;
+            button.visible = false;
         }
         if (button != null && button.visible && !logged) {
             logged = true;
