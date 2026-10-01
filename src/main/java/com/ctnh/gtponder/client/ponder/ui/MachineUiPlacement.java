@@ -64,7 +64,18 @@ public final class MachineUiPlacement {
         return this;
     }
 
-    /** 在指定面放一块覆盖板，覆盖板用 GT 的注册 id 指定，例如 {@code gtceu:conveyor}。 */
+    /** 在指定面放一块覆盖板，直接给覆盖板物品，例如 {@code GTItems.CONVEYOR_MODULE_LV.asStack()}。 */
+    public MachineUiPlacement cover(Direction side, ItemStack coverItem) {
+        return cover(side, coverItem, 0);
+    }
+
+    /** 面板出现 delayTicks 个 tick 后再放这块覆盖板。 */
+    public MachineUiPlacement cover(Direction side, ItemStack coverItem, int delayTicks) {
+        edits.add(new CoverChange(side, coverItem, delayTicks));
+        return this;
+    }
+
+    /** 用注册 id 指定覆盖板；分级覆盖板要带等级后缀，例如 {@code gtceu:conveyor.lv}。 */
     public MachineUiPlacement cover(Direction side, ResourceLocation coverId) {
         return cover(side, coverId, 0);
     }

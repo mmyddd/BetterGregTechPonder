@@ -6,8 +6,8 @@ package com.ctnh.gtponder.client.ponder.scenes;
 import com.ctnh.gtponder.client.ponder.MachineUIs;
 import com.ctnh.gtponder.client.ponder.ui.MachineUI;
 
-import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
+import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.data.GTMachines;
 
 import net.createmod.ponder.api.scene.SceneBuilder;
@@ -61,11 +61,11 @@ public class InputBusUi {
                 .attachKeyFrame();
         scene.idle(120);
 
-        // 第三次调用：在机器顶面贴一条传送带覆盖板。分级覆盖板的 id 带等级后缀，这里用 lv。
+        // 第三次调用：在机器顶面贴一条传送带覆盖板，直接给覆盖板物品。
         // 指向点比方块中心低一点，免得 speech box 的小尾巴正好压在顶面的覆盖板上。
         Vec3 lower = util.vector().centerOf(busPos).add(0, -0.35, 0);
         MachineUIs.showUI(scene, ULV_INPUT_BUS_UI).at(lower, busPos)
-                .cover(Direction.UP, GTCEu.id("conveyor.lv"), 10)
+                .cover(Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack(), 10)
                 .show(140);
         scene.idle(40);
         scene.overlay().showText(70)

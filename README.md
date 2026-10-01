@@ -37,8 +37,8 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
 ```java
 MachineUIs.showUI(builder, MY_UI)
         .at(pos)
-        .cover(Direction.UP, GTRegistries.COVERS.get(GTCEu.id("conveyor")))   // 也可以直接给 id
-        .cover(Direction.NORTH, new ResourceLocation("gtceu", "pump"), 40)    // 第 40 tick 再贴
+        .cover(Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack())            // 直接给覆盖板物品
+        .cover(Direction.NORTH, new ResourceLocation("gtceu", "pump.lv"), 40) // 也可以给 id（分级覆盖板带等级后缀）
         .slot(0).withItem(stack, 20)
         .show(200);
 ```
