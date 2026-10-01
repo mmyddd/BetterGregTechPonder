@@ -43,6 +43,8 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     /** 这次摆放挂的配方：入料、成品、进度条与机器的开停机都听它的。 */
     @Nullable
     private final RecipeFiller recipe;
+    /** 配方要编程电路时，面板里连电路 UI 一起画（场景没写 showCircuit() 也画）。 */
+    private final boolean recipeCircuit;
 
     private MachineUiPanel panel;
     private boolean failed;
@@ -59,6 +61,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         this.machinePos = machinePos == null ? BlockPos.containing(anchor) : machinePos;
         this.writes = new MachineUiWrites(this.machinePos, writes, fluidWrites);
         this.recipe = recipe == null ? null : new RecipeFiller(recipe, this.machinePos);
+        this.recipeCircuit = RecipeFiller.needsCircuit(recipe);
     }
 
     /**
@@ -139,7 +142,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             return panel;
         }
         try {
-            MachineUiPanel built = MachineUiPanelBuilder.build(ui, machinePos, blockEntity);
+            MachineUiPanel built = MachineUiPanelBuilder.build(ui, machinePos, blockEntity, recipeCircuit);
             if (built == null) {
                 return null;
             }

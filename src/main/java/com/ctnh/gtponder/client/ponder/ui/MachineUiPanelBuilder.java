@@ -48,7 +48,8 @@ final class MachineUiPanelBuilder {
     private MachineUiPanelBuilder() {}
 
     /** 造面板；这里不是机器、机器没有 UI、玩家不在（比如主菜单）时返回 null，元素这一段就不画。 */
-    static @Nullable MachineUiPanel build(MachineUI ui, BlockPos machinePos, BlockEntity blockEntity) {
+    static @Nullable MachineUiPanel build(MachineUI ui, BlockPos machinePos, BlockEntity blockEntity,
+                                         boolean recipeCircuit) {
         if (!(blockEntity instanceof IMachineBlockEntity holder)) {
             return null;
         }
@@ -75,7 +76,8 @@ final class MachineUiPanelBuilder {
         FancyMachineUIWidget fancy = root instanceof FancyMachineUIWidget widget ? widget : null;
         // 背包那一行留给编程电路用：机器有电路槽就不把这一行收掉，按钮与展开的面板都摆在这儿。
         Widget inventory = fancy == null ? null : fancy.getPlayerInventory();
-        boolean circuit = hasCircuitSlot(machine);
+        // 场景写了 showCircuit()，或者这段要展示的配方本身要电路，就把电路 UI 一起画出来。
+        boolean circuit = (ui.circuit() || recipeCircuit) && hasCircuitSlot(machine);
         if (fancy != null) {
             applyFancyChrome(fancy, ui, circuit);
         }

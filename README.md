@@ -9,7 +9,7 @@
 - 往机器上贴覆盖板、把机器模型切成工作/待机，都是独立的场景指令（改机器状态），和界面无关；机器不支持时在日志里报错
 - 给一个配方 id 就能把机器填满：输入、流体、成品各就各位，面板里的进度条自己走一遍；配方要编程电路时自动写进电路槽；机器与配方对不上时报错
 - 物品/流体的自动输出口朝向也能在场景里设（顺带打开自动输出），机器不支持时报错
-- 机器有编程电路槽时，面板内容区正下方固定画出编程电路：电路按钮居中，GT 自己的 0~32 编码设置格子对称排在按钮下面
+- 编程电路 UI 默认不画：要展示的配方带 `circuitMeta(n)` 时自动画出来，也可以用 `showCircuit()` 常开；展开的设置面板占背包那一行，按钮贴在它左边、垂直居中
 - 打开 Ponder 的编辑模式（`ponder-client.toml` 里的 `editingMode`）后，鼠标停在槽位上，tooltip 首行会显示该槽位在机器里的真实序号
 
 ## 环境
@@ -38,12 +38,14 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
 
 `slot(index)` 对应 UI 里第 index 个物品槽，`tank(index)` 对应第 index 个储罐；`withItem` / `withFluid` 的第二个参数是「面板出现后第几个 tick 开始写入」，
 写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。需要精确指向点时用 `at(vec)`（机器取该点所在方块）或 `at(vec, pos)`（指向点与机器分开给）；
-默认只画标题栏、左侧页签和机器页，`showPlayerInventory()`、`showConfigurators()`、`showNavigationButtons()` 可以把其余部分打开，
+默认只画标题栏、左侧页签和机器页，`showPlayerInventory()`、`showConfigurators()`、`showCircuit()`、`showNavigationButtons()` 可以把其余部分打开，
 缩放用 `scale(f)`，或用 `fitToPanel(0.42f)` 按 Ponder 面板宽度自适应。
 
-机器有编程电路槽（`IHasCircuitSlot`）时，背包那一行会多出编程电路 UI：展开的面板占背包原来的位置（带 GT 自己的
-背景与标题），左侧贴一个垂直居中的电路按钮，面板里是 GT 自己的 0~32 编码设置格子（用的就是 GT 的
-`CircuitFancyConfigurator`，只画这一个配置器，不画整个配置器面板）。
+机器有编程电路槽（`IHasCircuitSlot`）时，背包那一行可以多出一组编程电路 UI。默认不画；这段要展示的配方自己带
+`circuitMeta(n)` 时会自动画（正好看见电路被设成配方要的那一档），也可以在 `MachineUI` 上写 `showCircuit()` 常开。
+画出来时：
+展开的面板占背包原来的位置（带 GT 自己的背景与标题），左侧贴一个垂直居中的电路按钮，面板里是 GT 自己的
+0~32 编码设置格子（用的就是 GT 的 `CircuitFancyConfigurator`，只画这一个配置器，不画整个配置器面板）。
 按钮图标每帧重取，机器里的电路换了它跟着换。这里只负责画，不改机器状态；电路槽那个幽灵槽不算进 `slot(index)`，
 所以槽位序号仍与实机 UI 一致。
 

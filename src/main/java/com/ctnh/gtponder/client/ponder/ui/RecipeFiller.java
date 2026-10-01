@@ -62,6 +62,29 @@ final class RecipeFiller {
     private boolean circuitApplied;
     private ItemStack previousCircuit = ItemStack.EMPTY;
 
+    /**
+     * 这张配方要不要编程电路。面板出现前就得知道——要的话连电路 UI 一起画出来——所以单独问一次，
+     * 这里只看配方本身，机器对不对得上交给 {@link #plan} 那一步报错。
+     */
+    static boolean needsCircuit(@Nullable MachineUiPlacement.RecipeFill fill) {
+        if (fill == null) {
+            return false;
+        }
+        ResourceLocation key = ResourceLocation.tryParse(fill.recipeId());
+        ClientLevel level = Minecraft.getInstance().level;
+        RecipeManager manager = key == null || level == null ? null : level.getRecipeManager();
+        Recipe<?> found = manager == null ? null : manager.byKey(key).orElse(null);
+        if (!(found instanceof GTRecipe recipe)) {
+            return false;
+        }
+        for (ItemStack stack : RecipeHelper.getInputItems(recipe)) {
+            if (IntCircuitBehaviour.isIntegratedCircuit(stack)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     RecipeFiller(MachineUiPlacement.RecipeFill fill, BlockPos machinePos) {
         this.fill = fill;
         this.machinePos = machinePos;
