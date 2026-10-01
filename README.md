@@ -7,6 +7,7 @@
 - 面板用 Ponder 自己的 speech box 画，指针尖指向场景里的坐标
 - 槽位序号与游戏里的机器界面一致；物品数量与储罐流体量都从 0 在 1 秒内涨到目标值
 - 往机器上贴覆盖板、把机器模型切成工作/待机，都是独立的场景指令（改机器状态），和界面无关；机器不支持时在日志里报错
+- 给一个配方 id 就能把机器填满：输入、流体、成品各就各位，面板里的进度条自己走一遍；机器与配方对不上时报错
 - 打开 Ponder 的编辑模式（`ponder-client.toml` 里的 `editingMode`）后，鼠标停在槽位上，tooltip 首行会显示该槽位在机器里的真实序号
 
 ## 环境
@@ -40,6 +41,19 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
 
 **每段 `showUI` 演完（面板淡出时）会把机器恢复原状**——这一段写进去的物品/流体都会还原，不会带进下一段；场景回退同理。
 
+给一个配方 id，入料、流体、成品与进度条都由它安排：
+
+```java
+MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI).at(machinePos)
+        .recipe("gtceu:chemical_reactor/sodium_sulfide", 10)   // 入料 1 秒 → 进度条 1 秒 → 成品 1 秒
+        .show(200);
+```
+
+配方 id 就是 JEI 里那条配方，形如 `<模组>:<配方类型路径>/<配方名>`。输入的物品进输入槽、流体进输入储罐，
+成品等进度条走完再落进输出槽与输出储罐；哪些槽位和储罐算输入、哪些算输出，看的是 GT 自己打的 `IngredientIO` 标签，
+不用猜顺序。机器与配方对不上（不是配方机器、配方 id 不存在、配方类型不属于这台机器、面板里没有对应的槽位）时，
+在日志里报一行 error 并跳过这一段，面板照常画；`show(...)` 的时长要留够 3 秒（入料、进度条、成品各 1 秒）。
+
 改机器状态用独立的场景指令，不挂在界面上，因此不受上面的还原影响：
 
 ```java
@@ -63,7 +77,8 @@ MachineEdits.setWorkingModel(builder, pos, false, 20);   // 回到待机
 
 `gtponder:chemical_reactor_ui` 用的是 LV 化学反应釜：第一步只画界面；第二步往 1 号槽位写 64 个草方块、2 号槽位写 64 个玻璃；
 第三步往 0 号储罐灌 1000 mB 水；第四步不画面板，直接用场景指令在顶面贴一条传送带覆盖板；
-第五步把机器模型切成工作中的样子再切回待机。后两步都在演示机器改动与界面无关。
+第五步把机器模型切成工作中的样子再切回待机；第六步只给一个配方 id，面板自己把 2 个钠粉 + 1 个硫粉填进去、
+进度条走完、3 个硫化钠出来。第四、五步演示的是机器改动与界面无关。
 
 - 游戏里：JEI 搜 "LV Chemical Reactor"，悬停按 **W**（或者 `/ponder gtponder:chemical_reactor_ui`）
 - storyboard：`assets/gtponder/ponder/chemical_reactor_ui/common.nbt`（3x3 地板 + (1,1,1) 的 `gtceu:lv_chemical_reactor`）
@@ -84,7 +99,16 @@ src/main/java/com/ctnh/gtponder/
 │       ├── GTPonderPonderPlugin.java  场景注册
 │       ├── machine/                   机器改动：MachineEdit / CoverChange / WorkingModelChange / MachineEditInstruction / MachineEdits
 │       ├── scenes/ChemicalReactorUi.java  示例场景
-│       └── ui/                        MachineUI / MachineUiPlacement / MachineUiElement / ShowMachineUiInstruction
+│       └── ui/
+│           ├── MachineUI.java            界面描述对象（缩放、画哪些 fancy 组件）
+│           ├── MachineUiPlacement.java   摆放：at / pointing / slot / tank / recipe / show
+│           ├── MachineUiElement.java     叠加层元素：按坐标解析、跑时间线
+│           ├── MachineUiPanelBuilder.java 建面板：白名单、边界、收集槽位/储罐/进度条
+│           ├── MachineUiPanel.java       面板快照 + 槽位/储罐读写
+│           ├── MachineUiWrites.java      写入时间线：0 → 目标值、原样还原
+│           ├── RecipeFiller.java         配方 id → 入料、成品、进度条
+│           ├── MachineUiOverlay.java     speech box 与 tooltip 绘制
+│           └── ShowMachineUiInstruction.java  展示与收尾指令
 └── datagen/
     └── GTPonderDatagen.java           en_us 生成，文案由 Ponder 从场景里收
 ```

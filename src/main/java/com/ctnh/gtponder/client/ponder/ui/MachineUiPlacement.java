@@ -10,6 +10,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fluids.FluidStack;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +30,9 @@ public final class MachineUiPlacement {
     private Vec3 anchor = Vec3.ZERO;
     private Pointing pointing = Pointing.DOWN;
     private BlockPos machinePos;
+    @Nullable
+    private String recipeId;
+    private int recipeDelayTicks;
 
     MachineUiPlacement(SceneBuilder builder, MachineUI ui) {
         this.builder = builder;
@@ -68,10 +73,31 @@ public final class MachineUiPlacement {
         return new TankTarget(index);
     }
 
+    /**
+     * 按配方 id 自动填这台机器：输入进输入槽、流体进输入储罐、成品落进输出槽与输出储罐，
+     * 面板里的进度条跟着走一遍。
+     *
+     * <p>槽位和储罐哪个是输入、哪个是输出，看 GT 自己打的 {@code IngredientIO} 标签，不用猜顺序。
+     * 机器与配方对不上（不是配方机器、配方 id 不存在、配方类型不属于这台机器、面板里没有对应槽位）时
+     * 在日志里报一行 error，这一段跳过，面板照常画。
+     *
+     * <p>时间线：入料 1 秒 → 进度条 1 秒 → 成品 1 秒，{@code show(...)} 的时长要留够。
+     */
+    public MachineUiPlacement recipe(String recipeId) {
+        return recipe(recipeId, 0);
+    }
+
+    /** delayTicks 个 tick 后开始入料。 */
+    public MachineUiPlacement recipe(String recipeId, int delayTicks) {
+        this.recipeId = recipeId;
+        this.recipeDelayTicks = Math.max(0, delayTicks);
+        return this;
+    }
+
     /** 按给定 tick 数展示面板；此前登记的槽位写入按各自延迟执行。 */
     public void show(int ticks) {
         MachineUiElement element = new MachineUiElement(ui, anchor, pointing, machinePos, List.copyOf(writes),
-                List.copyOf(fluids));
+                List.copyOf(fluids), recipeId == null ? null : new RecipeFill(recipeId, recipeDelayTicks));
         builder.addInstruction(new ShowMachineUiInstruction(element, ticks));
     }
 
@@ -114,6 +140,9 @@ public final class MachineUiPlacement {
             return MachineUiPlacement.this;
         }
     }
+
+    /** 一次配方填充：配方 id 与开始入料的延迟。 */
+    record RecipeFill(String recipeId, int delayTicks) {}
 
     record SlotWrite(int index, ItemStack stack, int delayTicks) {}
 
