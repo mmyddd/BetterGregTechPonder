@@ -39,7 +39,13 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
 `slot(index)` 对应 UI 里第 index 个物品槽，`tank(index)` 对应第 index 个储罐；`withItem` / `withFluid` 的第二个参数是「面板出现后第几个 tick 开始写入」，
 写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。需要精确指向点时用 `at(vec)`（机器取该点所在方块）或 `at(vec, pos)`（指向点与机器分开给）；
 默认只画标题栏、左侧页签和机器页，`showPlayerInventory()`、`showConfigurators()`、`showCircuit()`、`showNavigationButtons()` 可以把其余部分打开，
-缩放用 `scale(f)`，或用 `fitToPanel(0.42f)` 按 Ponder 面板宽度自适应。
+缩放用 `scale(f)`，或用 `fitToPanel(0.42f)` 按 Ponder 面板宽度自适应。缩放也可以写在摆放那一步
+（`showUI(builder, ui, 0.6f)` 或链式 `.scale(0.6f)`），会盖过界面定义上的设定：
+
+```java
+MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI, 0.6f).at(pos).show(120);
+MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI).at(pos).scale(0.45f).show(120);
+```
 
 机器有编程电路槽（`IHasCircuitSlot`）时，背包那一行可以多出一组编程电路 UI。默认不画；这段要展示的配方自己带
 `circuitMeta(n)` 时会自动画（正好看见电路被设成配方要的那一档），也可以在 `MachineUI` 上写 `showCircuit()` 常开。

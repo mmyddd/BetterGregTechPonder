@@ -45,6 +45,8 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private final RecipeFiller recipe;
     /** 配方要编程电路时，面板里连电路 UI 一起画（场景没写 showCircuit() 也画）。 */
     private final boolean recipeCircuit;
+    /** 这次摆放的缩放；0 表示用界面定义自己的 scale / fitToPanel。 */
+    private final float scale;
 
     private MachineUiPanel panel;
     private boolean failed;
@@ -54,7 +56,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
 
     MachineUiElement(MachineUI ui, Vec3 anchor, Pointing pointing, BlockPos machinePos,
                      List<MachineUiPlacement.SlotWrite> writes, List<MachineUiPlacement.FluidWrite> fluidWrites,
-                     @Nullable MachineUiPlacement.RecipeFill recipe) {
+                     @Nullable MachineUiPlacement.RecipeFill recipe, float scale) {
         this.ui = ui;
         this.anchor = anchor;
         this.pointing = pointing;
@@ -62,6 +64,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         this.writes = new MachineUiWrites(this.machinePos, writes, fluidWrites);
         this.recipe = recipe == null ? null : new RecipeFiller(recipe, this.machinePos);
         this.recipeCircuit = RecipeFiller.needsCircuit(recipe);
+        this.scale = scale;
     }
 
     /**
@@ -126,10 +129,19 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             return;
         }
         try {
-            MachineUiOverlay.render(scene, graphics, screen, ui, current, anchor, pointing, partialTicks, fade);
+            MachineUiOverlay.render(scene, graphics, screen, current, anchor, pointing, partialTicks, fade,
+                    actualScale(screen, current));
         } catch (Throwable t) {
             fail("rendering the machine UI", t);
         }
+    }
+
+    /** 这次摆放的实际缩放：场景写死的优先，其次是界面定义上的 fitToPanel，最后是 scale。 */
+    private float actualScale(PonderUI screen, MachineUiPanel panel) {
+        if (scale > 0) {
+            return scale;
+        }
+        return ui.fitFraction() > 0 ? ui.fitFraction() * screen.width / Math.max(1, panel.width()) : ui.scale();
     }
 
     /** 按坐标取面板；BlockEntity 换了（重播、跳步）就重建一次，写入与配方也跟着重来。 */

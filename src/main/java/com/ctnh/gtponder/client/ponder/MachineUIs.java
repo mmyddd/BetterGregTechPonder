@@ -25,4 +25,9 @@ public final class MachineUIs {
     public static MachineUiPlacement showUI(SceneBuilder builder, MachineUI ui) {
         return ui.in(builder);
     }
+
+    /** 同上，顺便指定这次摆放的缩放（1.0 即 GUI 原始像素），盖过界面定义上的 scale / fitToPanel。 */
+    public static MachineUiPlacement showUI(SceneBuilder builder, MachineUI ui, float scale) {
+        return ui.in(builder).scale(scale);
+    }
 }

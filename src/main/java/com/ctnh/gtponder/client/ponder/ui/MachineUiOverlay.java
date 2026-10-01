@@ -48,11 +48,9 @@ final class MachineUiOverlay {
 
     private MachineUiOverlay() {}
 
-    static void render(PonderScene scene, GuiGraphics graphics, PonderUI screen, MachineUI ui, MachineUiPanel panel,
-                       Vec3 anchor, Pointing pointing, float partialTicks, float fade) {
+    static void render(PonderScene scene, GuiGraphics graphics, PonderUI screen, MachineUiPanel panel, Vec3 anchor,
+                       Pointing pointing, float partialTicks, float fade, float scale) {
         Vec2 projected = scene.getTransform().sceneToScreen(anchor, partialTicks);
-        float scale = ui.fitFraction() > 0 ? ui.fitFraction() * screen.width / Math.max(1, panel.width()) :
-                ui.scale();
         int width = Math.round(panel.width() * scale) + PADDING * 2;
         int height = Math.round(panel.height() * scale) + PADDING * 2;
 

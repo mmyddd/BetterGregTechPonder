@@ -33,6 +33,7 @@ public final class MachineUiPlacement {
     @Nullable
     private String recipeId;
     private int recipeDelayTicks;
+    private float scale;
 
     MachineUiPlacement(SceneBuilder builder, MachineUI ui) {
         this.builder = builder;
@@ -42,6 +43,15 @@ public final class MachineUiPlacement {
     /** 指向点：面板的指针尖（speech box 的小尾巴）对齐这个场景坐标。 */
     public MachineUiPlacement at(Vec3 anchor) {
         this.anchor = anchor;
+        return this;
+    }
+
+    /**
+     * 这次摆放单独指定缩放（1.0 即 GUI 原始像素）；不写就用 {@link MachineUI#scale(float)} /
+     * {@link MachineUI#fitToPanel(float)} 定下的那套。
+     */
+    public MachineUiPlacement scale(float scale) {
+        this.scale = scale;
         return this;
     }
 
@@ -97,7 +107,7 @@ public final class MachineUiPlacement {
     /** 按给定 tick 数展示面板；此前登记的槽位写入按各自延迟执行。 */
     public void show(int ticks) {
         MachineUiElement element = new MachineUiElement(ui, anchor, pointing, machinePos, List.copyOf(writes),
-                List.copyOf(fluids), recipeId == null ? null : new RecipeFill(recipeId, recipeDelayTicks));
+                List.copyOf(fluids), recipeId == null ? null : new RecipeFill(recipeId, recipeDelayTicks), scale);
         builder.addInstruction(new ShowMachineUiInstruction(element, ticks));
     }
 

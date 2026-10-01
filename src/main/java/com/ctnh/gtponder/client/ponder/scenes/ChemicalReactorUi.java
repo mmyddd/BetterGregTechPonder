@@ -102,6 +102,7 @@ public class ChemicalReactorUi {
 
         // 第六次：只给一个配方 id，入料、进度条、成品都自动走完。
         MachineUIs.showUI(scene, LV_CHEMICAL_REACTOR_UI).at(machinePos)
+                .scale(0.3F)
                 .recipe("gtceu:chemical_reactor/methane_from_elements", 10)
                 .show(160);
         scene.overlay().showText(80)
