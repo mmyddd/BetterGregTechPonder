@@ -109,7 +109,7 @@ public class ChemicalReactorUi {
                 .attachKeyFrame();
         scene.idle(180);
 
-        // 第七次：设自动输出口。物品走顶面、流体走南面；南面默认背对镜头，把镜头转过去，看完再转回来。
+        // 第七次：设自动输出口。物品走东面、流体走南面；南面默认背对镜头，把镜头转过去，看完再转回来。
         MachineEdits.setItemOutput(scene, machinePos, Direction.WEST, 10);
         scene.rotateCameraY(180);
         scene.idle(40);
