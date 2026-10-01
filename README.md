@@ -1,4 +1,4 @@
-# GT Ponder
+# BetterGregTechPonder
 
 在 Create 的思索（Ponder）场景里画出 **GregTech CEu Modern 机器自己的界面**，并按它真实的槽位序号往里放物品、灌流体。
 
@@ -126,28 +126,28 @@ MachineEdits.setWorkingModel(builder, pos, false, 20);   // 回到待机
 
 ## 示例场景
 
-`gtponder:chemical_reactor_ui` 用的是 LV 化学反应釜：第一步只画界面；第二步往 1 号槽位写 64 个草方块、2 号槽位写 64 个玻璃；
+`bettergregtechponder:chemical_reactor_ui` 用的是 LV 化学反应釜：第一步只画界面；第二步往 1 号槽位写 64 个草方块、2 号槽位写 64 个玻璃；
 第三步往 0 号储罐灌 1000 mB 水；第四步不画面板，直接用场景指令在顶面贴一条传送带覆盖板；
 第五步把机器模型切成工作中的样子再切回待机；第六步只给一个配方 id，面板自己把 1 个碳粉与 4000 mB 氢气填进去、
 把电路设成配方要的 1，进度条走完、1000 mB 甲烷出来。第四、五步演示的是机器改动与界面无关。
 
-- 游戏里：JEI 搜 "LV Chemical Reactor"，悬停按 **W**（或者 `/ponder gtponder:chemical_reactor_ui`）
-- storyboard：`assets/gtponder/ponder/chemical_reactor_ui/common.nbt`（3x3 地板 + (1,1,1) 的 `gtceu:lv_chemical_reactor`）
+- 游戏里：JEI 搜 "LV Chemical Reactor"，悬停按 **W**（或者 `/ponder bettergregtechponder:chemical_reactor_ui`）
+- storyboard：`assets/bettergregtechponder/ponder/chemical_reactor_ui/common.nbt`（3x3 地板 + (1,1,1) 的 `gtceu:lv_chemical_reactor`）
 - 本地运行的开发依赖里带了 JEI 与 JustEnoughCharacters（拼音搜索），方便从 JEI 直接开思索
 - `en_us` 由 `gradlew runData` 生成到 `src/generated/resources`，key 与正文都由 Ponder 从场景脚本里收（`<modid>.ponder.<场景 id>.header|text_N`），不用手写；
-  `zh_cn` 手写在 `src/main/resources/assets/gtponder/lang/`，datagen 不管它
-- 示例只在开发环境注册（`GTPonderPonderPlugin#exampleScenesEnabled`）：正式 jar 里默认不注册，可用 `-Dgtponder.exampleScenes=true|false` 强制开关
+  `zh_cn` 手写在 `src/main/resources/assets/bettergregtechponder/lang/`，datagen 不管它
+- 示例只在开发环境注册（`BetterGregTechPonderPlugin#exampleScenesEnabled`）：正式 jar 里默认不注册，可用 `-Dbettergregtechponder.exampleScenes=true|false` 强制开关
 
 ## 目录
 
 ```
-src/main/java/com/ctnh/gtponder/
-├── GTPonder.java                      mod 入口
+src/main/java/com/ctnh/bettergregtechponder/
+├── BetterGregTechPonder.java                      mod 入口
 ├── client/
-│   ├── GTPonderClient.java            客户端入口，把场景插件交给 Ponder
+│   ├── BetterGregTechPonderClient.java            客户端入口，把场景插件交给 Ponder
 │   └── ponder/
 │       ├── MachineUIs.java            场景侧入口 showUI
-│       ├── GTPonderPonderPlugin.java  场景注册
+│       ├── BetterGregTechPonderPlugin.java  场景注册
 │       ├── machine/                   机器改动：MachineEdit / CoverChange / WorkingModelChange / MachineEditInstruction / MachineEdits
 │       ├── scenes/ChemicalReactorUi.java  示例场景
 │       └── ui/
@@ -161,7 +161,7 @@ src/main/java/com/ctnh/gtponder/
 │           ├── MachineUiOverlay.java     speech box 与 tooltip 绘制
 │           └── ShowMachineUiInstruction.java  展示与收尾指令
 └── datagen/
-    └── GTPonderDatagen.java           en_us 生成，文案由 Ponder 从场景里收
+    └── BetterGregTechPonderDatagen.java           en_us 生成，文案由 Ponder 从场景里收
 ```
 
 ## 许可

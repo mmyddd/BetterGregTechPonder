@@ -1,39 +1,39 @@
 modLoader = "javafml"
 loaderVersion = "[47,)"
 license = "GPL-3.0"
-issueTrackerURL = "https://github.com/mmyddd/GTPonder/issues"
+issueTrackerURL = "https://github.com/mmyddd/BetterGregTechPonder/issues"
 
 [[mods]]
-modId = "gtponder"
+modId = "bettergregtechponder"
 version = "1.0.0"
-displayName = "GT Ponder"
+displayName = "BetterGregTechPonder"
 authors = "mmyddd"
 description = '''
 A client-side library that draws a real GregTech machine UI inside Create Ponder scenes.
 '''
 
-[[dependencies.gtponder]]
+[[dependencies.bettergregtechponder]]
     modId = "forge"
     mandatory = true
     versionRange = "[47,)"
     ordering = "NONE"
     side = "BOTH"
 
-[[dependencies.gtponder]]
+[[dependencies.bettergregtechponder]]
     modId = "minecraft"
     mandatory = true
     versionRange = "[1.20.1,1.21)"
     ordering = "NONE"
     side = "BOTH"
 
-[[dependencies.gtponder]]
+[[dependencies.bettergregtechponder]]
     modId = "gtceu"
     mandatory = true
     versionRange = "*"
     ordering = "NONE"
     side = "BOTH"
 
-[[dependencies.gtponder]]
+[[dependencies.bettergregtechponder]]
     modId = "create"
     mandatory = true
     versionRange = "*"
