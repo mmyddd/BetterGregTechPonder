@@ -115,8 +115,8 @@ public class ChemicalReactorUi {
                 .text("Auto-output sides are machine state as well: items leave through the west side, fluids through the south side.")
                 .pointAt(util.vector().centerOf(machinePos))
                 .attachKeyFrame();
-        scene.idle(80);
         MachineEdits.setItemOutput(scene, machinePos, Direction.WEST, 10);
+        scene.idle(80);
         scene.rotateCameraY(180);
         scene.idle(40);
         MachineEdits.setFluidOutput(scene, machinePos, Direction.SOUTH, 10);

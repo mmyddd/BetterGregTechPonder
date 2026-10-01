@@ -76,12 +76,11 @@ final class MachineUiPanelBuilder {
 
         Widget root = pickRoot(modularUi);
         FancyMachineUIWidget fancy = root instanceof FancyMachineUIWidget widget ? widget : null;
-        // 背包那一行留给编程电路用：机器有电路槽就不把这一行收掉，按钮与展开的面板都摆在这儿。
         Widget inventory = fancy == null ? null : fancy.getPlayerInventory();
         // 场景写了 showCircuit()，或者这段要展示的配方本身要电路，就把电路 UI 一起画出来。
         boolean circuit = (ui.circuit() || recipeCircuit) && hasCircuitSlot(machine);
         if (fancy != null) {
-            applyFancyChrome(fancy, ui, circuit);
+            applyFancyChrome(fancy, ui);
         }
         List<SlotWidget> slots = collectMachineSlots(modularUi);
         List<Widget> tanks = collectMachineTanks(modularUi);
@@ -110,7 +109,7 @@ final class MachineUiPanelBuilder {
     }
 
     /**
-     * 挂上编程电路 UI，位置照 GT 实机那套来：展开的面板占背包原来的位置，按钮贴在它左边、垂直居中。
+     * 挂上编程电路 UI：展开的面板挂在面板下方、与背包那一行水平对齐，按钮贴在它左边、垂直居中。
      *
      * <p>展开的面板自己带 GT 的背景与标题（跟 {@code ConfiguratorPanel} 里那个浮层一样），里面是 GT 自己的
      * {@link CircuitFancyConfigurator}：上面幽灵电路槽、下面 0~32 的格子。按钮图标每帧重取，所以电路换了
@@ -121,12 +120,11 @@ final class MachineUiPanelBuilder {
             return;
         }
         Widget content = root instanceof FancyMachineUIWidget fancy ? fancy.getPageContainer() : root;
-        // 背包那一行：有背包控件就用它的矩形，没有就退回内容区正下方。
+        // 水平方向对背包那一行居中；竖直方向挂在整块面板下方，与它之间留出 speech box 的底色，
+        // 不然两块灰底直接连在一起，看着还是贴着的。
         int rowX = inventory == null ? content.getPositionX() : inventory.getPositionX();
-        // 与上方机器内容留一点距离，不然两块贴在一起。
-        int rowY = (inventory == null ? content.getPositionY() + content.getSizeHeight() :
-                inventory.getPositionY()) + CIRCUIT_GAP;
         int rowWidth = inventory == null ? content.getSizeWidth() : inventory.getSizeWidth();
+        int rowY = root.getPositionY() + root.getSizeHeight() + CIRCUIT_GAP;
 
         CircuitFancyConfigurator configurator = new CircuitFancyConfigurator(holder.getCircuitInventory().storage);
         Widget body = configurator.createConfigurator();
@@ -160,17 +158,14 @@ final class MachineUiPanelBuilder {
      * 按 MachineUI 的开关决定哪些 fancy 组件可见：玩家背包、配置器面板、提示面板等不在白名单里的一律隐藏，
      * 标题栏上的返回与翻页按钮也一并关掉。
      */
-    private static void applyFancyChrome(FancyMachineUIWidget fancy, MachineUI ui, boolean keepInventoryRow) {
+    private static void applyFancyChrome(FancyMachineUIWidget fancy, MachineUI ui) {
         PlayerInventoryWidget inventory = fancy.getPlayerInventory();
         if (inventory != null) {
             if (ui.playerInventory()) {
                 inventory.setVisible(true);
             } else if (inventory.isVisible()) {
                 inventory.setVisible(false);
-                if (!keepInventoryRow) {
-                    // 这一行有别的用处（编程电路）时就留着，不然空一条。
-                    fancy.setSize(fancy.getSizeWidth(), Math.max(0, fancy.getSizeHeight() - inventory.getSizeHeight()));
-                }
+                fancy.setSize(fancy.getSizeWidth(), Math.max(0, fancy.getSizeHeight() - inventory.getSizeHeight()));
             }
         }
 
