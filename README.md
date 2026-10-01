@@ -41,8 +41,9 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
 默认只画标题栏、左侧页签和机器页，`showPlayerInventory()`、`showConfigurators()`、`showNavigationButtons()` 可以把其余部分打开，
 缩放用 `scale(f)`，或用 `fitToPanel(0.42f)` 按 Ponder 面板宽度自适应。
 
-机器有编程电路槽（`IHasCircuitSlot`）时，面板内容区正下方会多出编程电路 UI：一个电路按钮，下面跟着
-GT 自己的 0~32 编码设置格子（用的就是 GT 的 `CircuitFancyConfigurator`，只画这一个配置器，不画整个配置器面板）。
+机器有编程电路槽（`IHasCircuitSlot`）时，背包那一行会多出编程电路 UI：展开的面板占背包原来的位置（带 GT 自己的
+背景与标题），左侧贴一个垂直居中的电路按钮，面板里是 GT 自己的 0~32 编码设置格子（用的就是 GT 的
+`CircuitFancyConfigurator`，只画这一个配置器，不画整个配置器面板）。
 按钮图标每帧重取，机器里的电路换了它跟着换。这里只负责画，不改机器状态；电路槽那个幽灵槽不算进 `slot(index)`，
 所以槽位序号仍与实机 UI 一致。
 

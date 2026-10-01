@@ -15,6 +15,8 @@ import com.gregtechceu.gtceu.api.machine.feature.IHasCircuitSlot;
 import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
 
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
+import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
 import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
 import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
@@ -38,8 +40,10 @@ import java.util.List;
  */
 final class MachineUiPanelBuilder {
 
-    /** 编程电路 UI 与内容区下边缘之间的间距。 */
-    private static final int CIRCUIT_GAP = 4;
+    /** GT 配置器页签的边长，也是它的标题栏高度。 */
+    private static final int TAB_SIZE = 24;
+    /** GT 配置器面板的留白。 */
+    private static final int BORDER = 4;
 
     private MachineUiPanelBuilder() {}
 
@@ -68,8 +72,12 @@ final class MachineUiPanelBuilder {
         modularUi.initWidgets();
 
         Widget root = pickRoot(modularUi);
-        if (root instanceof FancyMachineUIWidget fancy) {
-            applyFancyChrome(fancy, ui);
+        FancyMachineUIWidget fancy = root instanceof FancyMachineUIWidget widget ? widget : null;
+        // 背包那一行留给编程电路用：机器有电路槽就不把这一行收掉，按钮与展开的面板都摆在这儿。
+        Widget inventory = fancy == null ? null : fancy.getPlayerInventory();
+        boolean circuit = hasCircuitSlot(machine);
+        if (fancy != null) {
+            applyFancyChrome(fancy, ui, circuit);
         }
         List<SlotWidget> slots = collectMachineSlots(modularUi);
         List<Widget> tanks = collectMachineTanks(modularUi);
@@ -82,7 +90,9 @@ final class MachineUiPanelBuilder {
         // 否则画的是初始化那一刻的 lastProgressValue，永远是 0。
         progress.forEach(Widget::setClientSideWidget);
         // 槽位收集完再挂电路 UI：它的幽灵槽不算进 slot(index) 里，序号跟实机 UI 保持一致。
-        attachCircuit(machine, root);
+        if (circuit) {
+            attachCircuit(machine, root, inventory);
+        }
         Bounds bounds = measure(root);
         GTPonder.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s), {} tank(s)", machinePos,
                 bounds.width(), bounds.height(), bounds.x(), bounds.y(), slots.size(), tanks.size());
@@ -90,52 +100,71 @@ final class MachineUiPanelBuilder {
                 machine, slots, tanks, progress);
     }
 
+    /** 机器有没有可用的编程电路槽。 */
+    private static boolean hasCircuitSlot(MetaMachine machine) {
+        return machine instanceof IHasCircuitSlot holder && holder.isCircuitSlotEnabled();
+    }
+
     /**
-     * 在机器内容区正下方挂上编程电路：电路按钮居中，编码设置 UI（0~32 的格子）对称地排在按钮下面。
+     * 挂上编程电路 UI，位置照 GT 实机那套来：展开的面板占背包原来的位置，按钮贴在它左边、垂直居中。
      *
-     * <p>只画这一个配置器，不画整个配置器面板。组件都用 GT 自己的 {@link CircuitFancyConfigurator}，
-     * 按钮图标每帧重取，所以电路换了按钮与格子里的东西也跟着换；这里只画，不改机器状态。
+     * <p>展开的面板自己带 GT 的背景与标题（跟 {@code ConfiguratorPanel} 里那个浮层一样），里面是 GT 自己的
+     * {@link CircuitFancyConfigurator}：上面幽灵电路槽、下面 0~32 的格子。按钮图标每帧重取，所以电路换了
+     * 按钮与格子里的东西也跟着换；这里只画，不改机器状态。
      */
-    private static void attachCircuit(MetaMachine machine, Widget root) {
-        if (!(root instanceof WidgetGroup parent) || !(machine instanceof IHasCircuitSlot holder) ||
-                !holder.isCircuitSlotEnabled()) {
+    private static void attachCircuit(MetaMachine machine, Widget root, @Nullable Widget inventory) {
+        if (!(root instanceof WidgetGroup parent) || !(machine instanceof IHasCircuitSlot holder)) {
             return;
         }
         Widget content = root instanceof FancyMachineUIWidget fancy ? fancy.getPageContainer() : root;
+        // 背包那一行：有背包控件就用它的矩形，没有就退回内容区正下方。
+        int rowX = inventory == null ? content.getPositionX() : inventory.getPositionX();
+        int rowY = inventory == null ? content.getPositionY() + content.getSizeHeight() : inventory.getPositionY();
+        int rowWidth = inventory == null ? content.getSizeWidth() : inventory.getSizeWidth();
+
         CircuitFancyConfigurator configurator = new CircuitFancyConfigurator(holder.getCircuitInventory().storage);
         Widget body = configurator.createConfigurator();
-        int width = Math.max(18, body.getSizeWidth());
-        WidgetGroup group = new WidgetGroup(content.getPositionX() + (content.getSizeWidth() - width) / 2,
-                content.getPositionY() + content.getSizeHeight() + CIRCUIT_GAP, width,
-                18 + CIRCUIT_GAP + body.getSizeHeight());
-        group.addWidget(new Widget((width - 18) / 2, 0, 18, 18) {
+        WidgetGroup view = new WidgetGroup(rowX + (rowWidth - body.getSizeWidth() - BORDER * 2) / 2, rowY,
+                body.getSizeWidth() + BORDER * 2, body.getSizeHeight() + TAB_SIZE + BORDER);
+        view.setBackground(GuiTextures.BACKGROUND);
+        body.setSelfPosition(BORDER, TAB_SIZE);
+        view.addWidget(body);
+        view.addWidget(new ImageWidget(BORDER + 5, BORDER, body.getSizeWidth() - TAB_SIZE - 5, TAB_SIZE - BORDER,
+                new TextTexture(configurator.getTitle().getString()).setType(TextTexture.TextType.LEFT_HIDE)
+                        .setWidth(body.getSizeWidth() - TAB_SIZE)));
+        parent.addWidget(view);
+
+        // 按钮贴在展开面板的左边，跟它垂直居中（GT 实机里那一列也是贴着配置器面板的左边）。
+        parent.addWidget(new Widget(view.getPositionX() - TAB_SIZE - 2,
+                view.getPositionY() + (view.getSizeHeight() - TAB_SIZE) / 2, TAB_SIZE, TAB_SIZE) {
 
             @Override
             public void drawInBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
                 super.drawInBackground(graphics, mouseX, mouseY, partialTicks);
-                GuiTextures.BUTTON.draw(graphics, mouseX, mouseY, getPositionX(), getPositionY(), getSizeWidth(),
+                GuiTextures.BACKGROUND.draw(graphics, mouseX, mouseY, getPositionX(), getPositionY(), getSizeWidth(),
                         getSizeHeight());
-                configurator.getIcon().draw(graphics, mouseX, mouseY, getPositionX(), getPositionY(), getSizeWidth(),
-                        getSizeHeight());
+                // 与 GT 配置器页签一样，16×16 的图标落在 (width - 20, 4)。
+                configurator.getIcon().draw(graphics, mouseX, mouseY, getPositionX() + getSizeWidth() - 20,
+                        getPositionY() + 4, 16, 16);
             }
         });
-        body.setSelfPosition((width - body.getSizeWidth()) / 2, 18 + CIRCUIT_GAP);
-        group.addWidget(body);
-        parent.addWidget(group);
     }
 
     /**
      * 按 MachineUI 的开关决定哪些 fancy 组件可见：玩家背包、配置器面板、提示面板等不在白名单里的一律隐藏，
      * 标题栏上的返回与翻页按钮也一并关掉。
      */
-    private static void applyFancyChrome(FancyMachineUIWidget fancy, MachineUI ui) {
+    private static void applyFancyChrome(FancyMachineUIWidget fancy, MachineUI ui, boolean keepInventoryRow) {
         PlayerInventoryWidget inventory = fancy.getPlayerInventory();
         if (inventory != null) {
             if (ui.playerInventory()) {
                 inventory.setVisible(true);
             } else if (inventory.isVisible()) {
                 inventory.setVisible(false);
-                fancy.setSize(fancy.getSizeWidth(), Math.max(0, fancy.getSizeHeight() - inventory.getSizeHeight()));
+                if (!keepInventoryRow) {
+                    // 这一行有别的用处（编程电路）时就留着，不然空一条。
+                    fancy.setSize(fancy.getSizeWidth(), Math.max(0, fancy.getSizeHeight() - inventory.getSizeHeight()));
+                }
             }
         }
 
