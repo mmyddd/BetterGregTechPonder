@@ -182,4 +182,25 @@ src/main/java/com/ctnh/bettergregtechponder/
 
 ## 许可
 
-GPL-3.0
+**GNU General Public License v3.0（GPL-3.0）**：[LICENSE](<LICENSE>)
+
+> **BetterGregTechPonder - Copyright and License Notice**
+>
+> This mod is derived from the same implementation used and maintained by the CTNH (Create: New Horizon) project,
+> where it lives in CTNH-Lib under the package `tech.vixhentx.mcmod.ctnhlib.client.ponder`. This repository is an
+> independent distribution of that code.
+>
+> This mod is released under the GNU General Public License v3.0. The full text of the license follows below.
+>
+> Use, modification and redistribution - including source code, compiled artifacts, and any **jar-in-jar** (bundled or
+> nested) dependencies inside those artifacts - must comply with the GPL-3.0. This notice and the full license text
+> must be preserved when redistributing the mod or any part of it.
+>
+> The GPL-3.0 does **not** propagate to CTNH (Create: New Horizon) as a project. CTNH is the origin of this
+> implementation: this derivation places no copyleft obligation on the CTNH project, on its source repositories, or on
+> the other code it distributes, and CTNH is not required to relicense any of it.
+>
+> That exemption applies to the CTNH project **only**, and it is not a loophole for anyone else. Taking this code - in
+> whole or in part, from this repository or from the copy inside the CTNH project, in source or compiled form - is still
+> taking GPL-3.0-licensed code: such use, modification or redistribution has to comply with the GPL-3.0, including source
+> disclosure and the same license for derivative works. Doing so places no obligation on the CTNH project itself.
