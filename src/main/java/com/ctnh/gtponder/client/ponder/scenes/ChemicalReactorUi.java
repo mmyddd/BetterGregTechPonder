@@ -110,14 +110,15 @@ public class ChemicalReactorUi {
         scene.idle(180);
 
         // 第七次：设自动输出口。物品走东面、流体走南面；南面默认背对镜头，把镜头转过去，看完再转回来。
-        MachineEdits.setItemOutput(scene, machinePos, Direction.WEST, 10);
-        scene.rotateCameraY(180);
-        scene.idle(40);
-        MachineEdits.setFluidOutput(scene, machinePos, Direction.SOUTH, 10);
         scene.overlay().showText(70)
                 .text("Auto-output sides are machine state as well: items leave through the west side, fluids through the south side.")
                 .pointAt(util.vector().centerOf(machinePos))
                 .attachKeyFrame();
+        scene.idle(80);
+        MachineEdits.setItemOutput(scene, machinePos, Direction.WEST, 10);
+        scene.rotateCameraY(180);
+        scene.idle(40);
+        MachineEdits.setFluidOutput(scene, machinePos, Direction.SOUTH, 10);
         scene.idle(150);
         scene.rotateCameraY(-180);
         scene.idle(30);

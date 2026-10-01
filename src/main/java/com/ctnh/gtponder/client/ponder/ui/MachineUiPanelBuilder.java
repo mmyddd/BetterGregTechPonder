@@ -44,6 +44,8 @@ final class MachineUiPanelBuilder {
     private static final int TAB_SIZE = 24;
     /** GT 配置器面板的留白。 */
     private static final int BORDER = 4;
+    /** 电路面板与上方机器内容之间的间距。 */
+    private static final int CIRCUIT_GAP = 8;
 
     private MachineUiPanelBuilder() {}
 
@@ -121,7 +123,9 @@ final class MachineUiPanelBuilder {
         Widget content = root instanceof FancyMachineUIWidget fancy ? fancy.getPageContainer() : root;
         // 背包那一行：有背包控件就用它的矩形，没有就退回内容区正下方。
         int rowX = inventory == null ? content.getPositionX() : inventory.getPositionX();
-        int rowY = inventory == null ? content.getPositionY() + content.getSizeHeight() : inventory.getPositionY();
+        // 与上方机器内容留一点距离，不然两块贴在一起。
+        int rowY = (inventory == null ? content.getPositionY() + content.getSizeHeight() :
+                inventory.getPositionY()) + CIRCUIT_GAP;
         int rowWidth = inventory == null ? content.getSizeWidth() : inventory.getSizeWidth();
 
         CircuitFancyConfigurator configurator = new CircuitFancyConfigurator(holder.getCircuitInventory().storage);
