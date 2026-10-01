@@ -25,27 +25,27 @@
 
 ## 展示
 
-**物品与流体填充** —— 序号就是机器界面里的真实槽位号，数量与液量从 0 在 1 秒内涨到目标值：
+[**物品与流体填充**](<#示例用法>) —— 序号就是机器界面里的真实槽位号，数量与液量从 0 在 1 秒内涨到目标值（详见下方的[示例用法](<#示例用法>)）：
 
-![物品与流体填充](<docs/showcase/items_and_fluids.gif>)
+[![物品与流体填充](<docs/showcase/items_and_fluids.gif>)](<#示例用法>)
 
-**配方自动填充** —— 只给一个配方 id：入料、编程电路、成品各就各位，进度条自己走一遍：
+[**配方自动填充**](<#示例用法>) —— 只给一个配方 id：入料、编程电路、成品各就各位，进度条自己走一遍（详见下方的[示例用法](<#示例用法>)）：
 
-![配方自动填充](<docs/showcase/recipe_autofill.gif>)
+[![配方自动填充](<docs/showcase/recipe_autofill.gif>)](<#示例用法>)
 
-**UI 详情** —— 点开左下角的「查看 UI 详情」：场景冻结，原版整套界面里的配置器与开关都能直接点：
+[**UI 详情**](<#示例用法>) —— 点开左下角的「查看 UI 详情」：场景冻结，原版整套界面里的配置器与开关都能直接点（详见下方的[示例用法](<#示例用法>)）：
 
-![UI 详情](<docs/showcase/ui_details.gif>)
+[![UI 详情](<docs/showcase/ui_details.gif>)](<#示例用法>)
 
-**机器状态也能在思索里改** —— 工作开关、覆盖板、自动输出口都不是只读的：机器的运行/待机模型跟着
-配方进度切换，只换正面贴图，配方逻辑与耗电原样不动：
+[**机器状态也能在思索里改**](<#示例用法>) —— 工作开关、覆盖板、自动输出口都不是只读的：机器的运行/待机模型跟着
+配方进度切换，只换正面贴图，配方逻辑与耗电原样不动（详见下方的[示例用法](<#示例用法>)）：
 
-![机器状态可调](<docs/showcase/machine_power_on.png>)
+[![机器状态可调](<docs/showcase/machine_power_on.png>)](<#示例用法>)
 
-**覆盖板与输出方向同理** —— 往指定面贴覆盖板、改物品/流体的自动输出口朝向，都是独立于界面的场景指令，
-演完自动还原：
+[**覆盖板与输出方向同理**](<#示例用法>) —— 往指定面贴覆盖板、改物品/流体的自动输出口朝向，都是独立于界面的场景指令，
+演完自动还原（详见下方的[示例用法](<#示例用法>)）：
 
-![覆盖板与输出方向可调](<docs/showcase/covers_and_output.png>)
+[![覆盖板与输出方向可调](<docs/showcase/covers_and_output.png>)](<#示例用法>)
 
 ## 环境
 
@@ -178,6 +178,59 @@ MachineEdits.setWorkingModel(builder, pos, false, 20);   // 回到待机
 第三步往 0 号储罐灌 1000 mB 水；第四步不画面板，直接用场景指令在顶面贴一条传送带覆盖板；
 第五步把机器模型切成工作中的样子再切回待机；第六步只给一个配方 id，面板自己把 1 个碳粉与 4000 mB 氢气填进去、
 把电路设成配方要的 1，进度条走完、1000 mB 甲烷出来。第四、五步演示的是机器改动与界面无关。
+
+### 示例用法
+
+```java
+// LV 化学反应釜——完整实现在 ChemicalReactorUi 里
+private static final MachineUI LV_UI = MachineUI.of(GTMachines.CHEMICAL_REACTOR[GTValues.LV]).scale(0.6f);
+private static final MachineUI FULL_UI = MachineUI.of(GTMachines.CHEMICAL_REACTOR[GTValues.LV]).showFullUI().scale(0.6f);
+
+public static void Common(SceneBuilder builder, SceneBuildingUtil util) {
+    CreateSceneBuilder scene = new CreateSceneBuilder(builder);
+    BlockPos machinePos = util.grid().at(1, 1, 1);
+
+    // 1. 只画界面
+    MachineUIs.showUI(scene, LV_UI).at(machinePos).show(120);
+
+    // 2. 物品按机器真实槽位序号写入
+    MachineUIs.showUI(scene, LV_UI).at(machinePos)
+            .slot(1).withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
+            .slot(2).withItem(new ItemStack(Items.GLASS, 64), 20)
+            .show(140);
+
+    // 3. 流体同理
+    MachineUIs.showUI(scene, LV_UI).at(machinePos)
+            .tank(0).withFluid(new FluidStack(Fluids.WATER, 1000), 20)
+            .show(140);
+
+    // 4. 机器状态：往指定面贴覆盖板，与界面无关
+    MachineEdits.placeCover(scene, machinePos, Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack(), 10);
+
+    // 5. 机器状态：工作/待机模型
+    MachineEdits.setWorkingModel(scene, machinePos, true, 10);
+    MachineEdits.setWorkingModel(scene, machinePos, false, 10);
+
+    // 6. 一个配方 id：入料、设电路、走进度条、出成品
+    MachineUIs.showUI(scene, LV_UI).at(machinePos)
+            .recipe("gtceu:chemical_reactor/sodium_bisulfate_from_salt", 10)
+            .outlineProgress(20)
+            .show(160);
+
+    // 7. 机器状态：自动输出口朝向
+    MachineEdits.setItemOutput(scene, machinePos, Direction.WEST, 10);
+    MachineEdits.setFluidOutput(scene, machinePos, Direction.SOUTH, 10);
+
+    // 8. 原版整套界面，配置器开关逐个套红框
+    MachineUIs.showUI(scene, FULL_UI).at(machinePos)
+            .outlinePowerToggle(20)
+            .outlineAutoOutput(20)
+            .outlineCircuitButton(20)
+            .show(160);
+
+    scene.markAsFinished();
+}
+```
 
 - 游戏里：JEI 搜 "LV Chemical Reactor"，悬停按 **W**（或者 `/ponder bettergregtechponder:chemical_reactor_ui`）
 - storyboard：`assets/bettergregtechponder/ponder/chemical_reactor_ui/common.nbt`（3x3 地板 + (1,1,1) 的 `gtceu:lv_chemical_reactor`）

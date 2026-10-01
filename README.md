@@ -25,28 +25,28 @@ Draws **a GregTech CEu Modern machine's own UI** inside Create Ponder scenes, an
 
 ## Showcase
 
-**Items and fluids** — the numbers are the real slot indices from the machine UI, and counts and amounts grow from 0 to the target value within one second:
+[**Items and fluids**](<#example-usage>) — the numbers are the real slot indices from the machine UI, and counts and amounts grow from 0 to the target value within one second (see the [example usage](<#example-usage>) below):
 
-![Items and fluids](<docs/showcase/items_and_fluids.gif>)
+[![Items and fluids](<docs/showcase/items_and_fluids.gif>)](<#example-usage>)
 
-**Recipe auto-fill** — one recipe id is all it takes: inputs, programmed circuit and outputs all land where they belong and the progress bar runs through once:
+[**Recipe auto-fill**](<#example-usage>) — one recipe id is all it takes: inputs, programmed circuit and outputs all land where they belong and the progress bar runs through once (see the [example usage](<#example-usage>) below):
 
-![Recipe auto-fill](<docs/showcase/recipe_autofill.gif>)
+[![Recipe auto-fill](<docs/showcase/recipe_autofill.gif>)](<#example-usage>)
 
-**UI details** — click "Show UI details" in the bottom-left corner: the scene freezes and the configurators and switches of GT's whole UI become clickable:
+[**UI details**](<#example-usage>) — click "Show UI details" in the bottom-left corner: the scene freezes and the configurators and switches of GT's whole UI become clickable (see the [example usage](<#example-usage>) below):
 
-![UI details](<docs/showcase/ui_details.gif>)
+[![UI details](<docs/showcase/ui_details.gif>)](<#example-usage>)
 
-**Machine state is editable from a scene too** — the working toggle, covers and auto-output sides are not read-only: the
+[**Machine state is editable from a scene too**](<#example-usage>) — the working toggle, covers and auto-output sides are not read-only: the
 working/idle model follows the recipe progress and only the front overlay changes, while recipe logic and power draw stay
-untouched:
+untouched (see the [example usage](<#example-usage>) below):
 
-![Machine state is editable](<docs/showcase/machine_power_on.png>)
+[![Machine state is editable](<docs/showcase/machine_power_on.png>)](<#example-usage>)
 
-**Covers and output sides work the same way** — putting a cover on a chosen side or changing an item/fluid auto-output side
-is a scene edit independent of the UI, reverted once the segment ends:
+[**Covers and output sides work the same way**](<#example-usage>) — putting a cover on a chosen side or changing an item/fluid auto-output side
+is a scene edit independent of the UI, reverted once the segment ends (see the [example usage](<#example-usage>) below):
 
-![Covers and output sides are editable](<docs/showcase/covers_and_output.png>)
+[![Covers and output sides are editable](<docs/showcase/covers_and_output.png>)](<#example-usage>)
 
 ## Environment
 
@@ -177,6 +177,59 @@ when the machine model has no working/idle state it reports one error line in th
 the third fills tank 0 with 1000 mB of water; the fourth draws no panel at all and puts a conveyor cover on the top side with a scene edit;
 the fifth switches the machine model to the working look and back to idle; the sixth gives one recipe id and the panel fills in 1 carbon dust and 4000 mB of hydrogen by itself,
 sets the circuit to the tier the recipe wants, runs the progress bar through and produces 1000 mB of methane. Steps four and five are there to show that machine edits are independent of the UI.
+
+### Example usage
+
+```java
+// LV chemical reactor - the whole example is ChemicalReactorUi
+private static final MachineUI LV_UI = MachineUI.of(GTMachines.CHEMICAL_REACTOR[GTValues.LV]).scale(0.6f);
+private static final MachineUI FULL_UI = MachineUI.of(GTMachines.CHEMICAL_REACTOR[GTValues.LV]).showFullUI().scale(0.6f);
+
+public static void Common(SceneBuilder builder, SceneBuildingUtil util) {
+    CreateSceneBuilder scene = new CreateSceneBuilder(builder);
+    BlockPos machinePos = util.grid().at(1, 1, 1);
+
+    // 1. the UI alone
+    MachineUIs.showUI(scene, LV_UI).at(machinePos).show(120);
+
+    // 2. items go into the machine's real slot indices
+    MachineUIs.showUI(scene, LV_UI).at(machinePos)
+            .slot(1).withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
+            .slot(2).withItem(new ItemStack(Items.GLASS, 64), 20)
+            .show(140);
+
+    // 3. fluids work the same way
+    MachineUIs.showUI(scene, LV_UI).at(machinePos)
+            .tank(0).withFluid(new FluidStack(Fluids.WATER, 1000), 20)
+            .show(140);
+
+    // 4. machine state: a cover on a chosen side, no panel involved
+    MachineEdits.placeCover(scene, machinePos, Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack(), 10);
+
+    // 5. machine state: working / idle model
+    MachineEdits.setWorkingModel(scene, machinePos, true, 10);
+    MachineEdits.setWorkingModel(scene, machinePos, false, 10);
+
+    // 6. one recipe id fills inputs, sets the circuit, runs the bar, drops the outputs
+    MachineUIs.showUI(scene, LV_UI).at(machinePos)
+            .recipe("gtceu:chemical_reactor/sodium_bisulfate_from_salt", 10)
+            .outlineProgress(20)
+            .show(160);
+
+    // 7. machine state: auto-output sides
+    MachineEdits.setItemOutput(scene, machinePos, Direction.WEST, 10);
+    MachineEdits.setFluidOutput(scene, machinePos, Direction.SOUTH, 10);
+
+    // 8. GT's whole UI, with the configurator switches boxed one by one
+    MachineUIs.showUI(scene, FULL_UI).at(machinePos)
+            .outlinePowerToggle(20)
+            .outlineAutoOutput(20)
+            .outlineCircuitButton(20)
+            .show(160);
+
+    scene.markAsFinished();
+}
+```
 
 - In game: search JEI for "LV Chemical Reactor", hover it and press **W** (or use `/ponder bettergregtechponder:chemical_reactor_ui`)
 - storyboard: `assets/bettergregtechponder/ponder/chemical_reactor_ui/common.nbt` (3x3 floor plus `gtceu:lv_chemical_reactor` at (1,1,1))
