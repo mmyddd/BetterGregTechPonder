@@ -37,6 +37,9 @@ final class ConfiguratorTabs {
 
     private static Field configuratorField;
     private static boolean fieldMissing;
+    @Nullable
+    private static Field buttonField;
+    private static boolean buttonFieldMissing;
 
     private ConfiguratorTabs() {}
 
@@ -61,17 +64,62 @@ final class ConfiguratorTabs {
         return buttons;
     }
 
-    /** 配置器面板里的电路页签；没有（机器没电路槽、面板没画、或反射拿不到）就是 null。 */
-    static @Nullable ConfiguratorPanel.Tab circuitTab(@Nullable ConfiguratorPanel panel) {
+
+    /**
+     * 手动同步配置器自己的缓存。
+     *
+     * <p>开关（IFancyConfiguratorButton.Toggle）把「按下状态」缓存在自己的字段里：点击时用缓存值算新状态、
+     * 图标也读缓存值。那个缓存平时由 LDLib 的容器同步（detectAndSendChange）刷新，而 ponder 里没有容器，
+     * 于是它停在初始值 —— 点击看似没反应、图标也不变。这里调用 GT 自己的 detectAndSendChange，
+     * 发送方给个空实现，只取它「把 supplier 的值写进缓存」的那一半。
+     */
+    static void syncConfigurators(@Nullable ConfiguratorPanel panel) {
         if (panel == null) {
-            return null;
+            return;
         }
         for (ConfiguratorPanel.Tab tab : panel.getTabs()) {
-            if (configuratorOf(tab) instanceof CircuitFancyConfigurator) {
-                return tab;
+            IFancyConfigurator configurator = configuratorOf(tab);
+            if (configurator == null) {
+                continue;
+            }
+            try {
+                configurator.detectAndSendChange((id, writer) -> {});
+            } catch (Throwable ignored) {
+                // 个别配置器可能挑环境，跳过即可
             }
         }
-        return null;
+    }
+
+    /**
+     * 页签里那个按钮：GT 把 onClick 挂在它的 onPressCallback 上（ConfiguratorPanel.java:183），
+     * 直接点它才是原版路径。只调 Tab.mouseClicked 的话，页签矩形命中就会返回 true（该方法末尾是
+     * {@code super.mouseClicked(...) || isMouseOverElement(...)}），按钮却不一定被触发。
+     */
+    static @Nullable Widget buttonOf(ConfiguratorPanel.Tab tab) {
+        Field field = buttonField();
+        if (field == null) {
+            return null;
+        }
+        try {
+            return (Widget) field.get(tab);
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private static @Nullable Field buttonField() {
+        if (buttonField == null && !buttonFieldMissing) {
+            try {
+                Field field = ConfiguratorPanel.Tab.class.getDeclaredField("button");
+                field.setAccessible(true);
+                buttonField = field;
+            } catch (Throwable t) {
+                buttonFieldMissing = true;
+                BetterGregTechPonder.LOGGER.error("BetterGregTechPonder: cannot read the button of a " +
+                        "configurator tab; switches will not be clickable", t);
+            }
+        }
+        return buttonField;
     }
 
     private static boolean matches(IFancyConfigurator configurator, MachineUiPlacement.Part part) {

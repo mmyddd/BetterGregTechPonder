@@ -39,6 +39,9 @@ final class MachineUiOverlay {
     private static final int PADDING = 3;
     /** speech box 的指针占位：PonderUI#renderSpeechBox 里的 divotSize(8) + 1 + distance(1)。 */
     private static final int DIVOT_SPAN = 10;
+    /** 前景层在这个环境里能不能用，只报一次。 */
+    private static boolean foregroundFailed;
+
     /** 面板离屏幕边缘至少留出的像素。 */
     private static final int MARGIN = 6;
     /** 红框的边框粗细（面板像素，跟着面板一起缩）。 */
@@ -56,7 +59,7 @@ final class MachineUiOverlay {
 
     static void render(PonderScene scene, GuiGraphics graphics, PonderUI screen, MachineUiElement owner,
                        MachineUiPanel panel, Vec3 anchor, Pointing pointing, float partialTicks, float fade,
-                       float scale, List<Box> boxes, float pulse) {
+                       float scale, List<Box> boxes, float pulse, boolean full) {
         Vec2 projected = scene.getTransform().sceneToScreen(anchor, partialTicks);
         int width = Math.round(panel.width() * scale) + PADDING * 2;
         int height = Math.round(panel.height() * scale) + PADDING * 2;
@@ -89,7 +92,7 @@ final class MachineUiOverlay {
         float uiMouseX = (float) ((mouse.x - contentX) / scale) + panel.originX();
         float uiMouseY = (float) ((mouse.y - contentY) / scale) + panel.originY();
         // 把落点交给交互层：点「查看 UI 详情」打开后，点击就是按这套换算反算回 UI 坐标的。
-        MachineUiInteraction.publish(owner, panel, contentX, contentY, scale);
+        MachineUiInteraction.publish(owner, panel, contentX, contentY, scale, full);
 
         graphics.pose().pushPose();
         graphics.pose().translate(projected.x + dx + xFade, projected.y + dy + yFade, Z);
@@ -104,12 +107,33 @@ final class MachineUiOverlay {
         RenderSystem.setShaderColor(1, 1, 1, fade);
         panel.modularUi().mainGroup.drawInBackground(graphics, Math.round(uiMouseX), Math.round(uiMouseY),
                 partialTicks);
+        drawForeground(panel, graphics, Math.round(uiMouseX), Math.round(uiMouseY), partialTicks);
         // 红框叠在面板之上，仍在同一套缩放与淡入里，所以跟着面板一起缩、一起淡。
         drawBoxes(graphics, boxes, pulse);
         RenderSystem.setShaderColor(1, 1, 1, 1);
         graphics.pose().popPose();
 
         renderTooltips(graphics, panel, uiMouseX, uiMouseY, mouse.x, mouse.y);
+    }
+
+    /**
+     * 前景层：选中高亮、幽灵槽文字这些画在这里。
+     *
+     * <p>但它会去要 {@code ModularUIGuiContainer}，而 ponder 里没有这个容器：
+     * GT 的 ConfiguratorPanel 与 LDLib 的 SlotWidget 在那里都会 NPE。所以整层包一层保护，
+     * 崩了就只跳过前景层（背景层已经画完，面板照常显示），并且只报一次。
+     */
+    private static void drawForeground(MachineUiPanel panel, GuiGraphics graphics, int mouseX, int mouseY,
+                                        float partialTicks) {
+        try {
+            panel.modularUi().mainGroup.drawInForeground(graphics, mouseX, mouseY, partialTicks);
+        } catch (Throwable t) {
+            if (!foregroundFailed) {
+                foregroundFailed = true;
+                BetterGregTechPonder.LOGGER.warn("BetterGregTechPonder: the machine UI foreground pass is not " +
+                        "available in ponder (no ModularUIGuiContainer); highlights will be skipped", t);
+            }
+        }
     }
 
     /** 红框：面板坐标里的空心方框，透明度跟着 pulse 呼吸。 */

@@ -94,6 +94,9 @@ final class MachineUiPanelBuilder {
         progress.forEach(Widget::setClientSideWidget);
         // 槽位收集完再挂电路 UI：它的幽灵槽不算进 slot(index) 里，序号跟实机 UI 保持一致。
         Widget circuitUi = circuit ? attachCircuit(machine, root, inventory) : null;
+        // 配置器里开关的「按下状态」平时由 LDLib 容器同步刷新，ponder 里没有容器，得自己刷一遍，
+        // 否则第一帧图标就是旧的（而且点击时算出的新状态也永远是旧的）。
+        ConfiguratorTabs.syncConfigurators(fancy == null ? null : fancy.getConfiguratorPanel());
         Bounds bounds = measure(root);
         BetterGregTechPonder.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s), {} tank(s)", machinePos,
                 bounds.width(), bounds.height(), bounds.x(), bounds.y(), slots.size(), tanks.size());

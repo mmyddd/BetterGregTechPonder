@@ -113,16 +113,15 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         if (failed || finished) {
             return;
         }
-        // 观众点页签换了页面：面板的边界、槽位表与储罐表都变了，重建一份快照。
-        if (MachineUiInteraction.takeDirtyOwner() == this) {
-            panel = null;
-        }
         ticksShown++;
         MachineUiPanel current = resolve(scene);
         if (current == null) {
             return;
         }
         current.modularUi().mainGroup.updateScreen();
+        // 不是详情模式时也要刷配置器缓存：关掉详情后机器状态已经写回，图标得跟着回到打开前的样子，
+        // 不能等到下次再打开模式才更新（LDLib 容器不在，这个缓存的刷新只能我们自己来）。
+        ConfiguratorTabs.syncConfigurators(current.configurators());
         // 配方按进度条开关机，改的是机器模型；Ponder 把世界渲染缓存住了，切完得让它重画一次。
         if (recipe != null && recipe.tick(current, ticksShown)) {
             MachineEdits.redraw(scene);
@@ -141,10 +140,15 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         }
         try {
             MachineUiOverlay.render(scene, graphics, screen, this, current, anchor, pointing, partialTicks, fade,
-                    actualScale(screen, current), outlineBoxes(current), pulse());
+                    actualScale(screen, current), outlineBoxes(current), pulse(), ui.full());
         } catch (Throwable t) {
             fail("rendering the machine UI", t);
         }
+    }
+
+    /** 丢掉面板快照，下一帧重新解析：观众点页签换了页面之后边界与槽位表都要重算。 */
+    void invalidate() {
+        panel = null;
     }
 
     /** 这次摆放的实际缩放：场景写死的优先，其次是界面定义上的 fitToPanel，最后是 scale。 */

@@ -4,6 +4,7 @@
 package com.ctnh.bettergregtechponder.mixin;
 
 import com.ctnh.bettergregtechponder.client.ponder.PonderUiButtons;
+import com.ctnh.bettergregtechponder.client.ponder.ui.MachineUiInteraction;
 
 import net.createmod.ponder.foundation.ui.PonderUI;
 import net.minecraft.client.gui.GuiGraphics;
@@ -48,8 +49,29 @@ public abstract class PonderUIMixin {
         }
     }
 
+    @Inject(method = "tick", at = @At("HEAD"), cancellable = true, remap = false)
+    private void bettergregtechponder$freezeScene(CallbackInfo ci) {
+        // 打开「查看 UI 详情」时把整个思索冻住：场景不再推进，跟"查看方块名称"一个效果，
+        // 这样观众点页签、展开电路面板时进度条不会继续跑。
+        if (MachineUiInteraction.enabled()) {
+            PonderUiButtons.tick();
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "tick", at = @At("RETURN"), remap = false)
     private void bettergregtechponder$tickButton(CallbackInfo ci) {
         PonderUiButtons.tick();
+    }
+
+    /**
+     * 渲染用的 partial ticks 也要冻住，否则场景虽然不推进，元素之间的插值还在动（进度条会微微抖）。
+     * 这里跟 Ponder 自己处理"查看方块名称"的方式一致：返回暂停时记下的那一帧。
+     */
+    @Inject(method = "getPartialTicks", at = @At("HEAD"), cancellable = true, remap = false)
+    private static void bettergregtechponder$freezePartialTicks(CallbackInfoReturnable<Float> cir) {
+        if (MachineUiInteraction.enabled()) {
+            cir.setReturnValue(PonderUI.ponderPartialTicksPaused);
+        }
     }
 }
