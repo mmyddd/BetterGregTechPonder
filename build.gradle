@@ -1,5 +1,20 @@
+buildscript {
+    repositories {
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+    }
+}
+
 plugins {
     id 'net.neoforged.moddev.legacyforge' version '2.0.142'
+}
+
+mixin {
+    add sourceSets.main, "mixins.${mod_id}.refmap.json"
+    config "${mod_id}.mixins.json"
 }
 
 version = mod_version
@@ -19,11 +34,15 @@ tasks.withType(JavaCompile).configureEach {
 // datagen 的增量缓存留在仓库里，但不该进 mod jar。
 jar {
     exclude '.cache/**'
+    manifest {
+        attributes 'MixinConfigs': 'bettergregtechponder.mixins.json'
+    }
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
+    maven { name = 'Sponge'; url = 'https://repo.spongepowered.org/repository/maven-public/' }
     maven { name = 'firstdarkdev'; url = 'https://maven.firstdarkdev.xyz/snapshots' }
     maven { url = 'https://maven.tterrag.com/' }
     maven {
@@ -79,6 +98,8 @@ legacyForge {
 }
 
 dependencies {
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
     modCompileOnly "curse.maven:gregtechceu-modern-890405:${gtceu_file_id}"
     modCompileOnly "com.lowdragmc.ldlib:ldlib-forge-1.20.1:${ldlib_version}"
     modCompileOnly "com.tterrag.registrate:Registrate:${registrate_version}"

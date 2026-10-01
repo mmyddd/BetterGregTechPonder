@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.ctnh.bettergregtechponder.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.bettergregtechponder.refmap.json",
+  "client": [
+    "PonderUIMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
