@@ -12,6 +12,11 @@ java {
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
+// datagen 的增量缓存留在仓库里，但不该进 mod jar。
+jar {
+    exclude '.cache/**'
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
