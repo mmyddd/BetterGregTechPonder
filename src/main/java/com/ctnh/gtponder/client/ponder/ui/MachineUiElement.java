@@ -207,10 +207,11 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         try {
             Widget hovered = current.modularUi().mainGroup.getHoverElement(uiMouseX, uiMouseY);
             List<Component> lines = new ArrayList<>(tooltipFor(hovered, uiMouseX, uiMouseY));
+            // 空槽位的 getFullTooltipTexts() 是空列表，序号得在判空之前加。
+            appendSlotIndex(current, hovered, lines);
             if (lines.isEmpty()) {
                 return;
             }
-            appendSlotIndex(current, hovered, lines);
             graphics.renderTooltip(Minecraft.getInstance().font, lines, Optional.empty(), (int) screenX,
                     (int) screenY);
         } catch (Throwable t) {
