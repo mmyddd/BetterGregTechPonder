@@ -11,6 +11,7 @@
 - 物品/流体的自动输出口朝向也能在场景里设（顺带打开自动输出），机器不支持时报错
 - 编程电路 UI 默认不画：要展示的配方带 `circuitMeta(n)` 时自动画出来，也可以用 `showCircuit()` 常开；展开的设置面板占背包那一行，按钮贴在它左边、垂直居中
 - 可以给面板里的槽位、储罐、进度条、编程电路套红框，把注意力引过去
+- `showFullUI()` 能把原版 GT 的整套界面原样画出来（配置器面板、提示面板、玩家背包都在），不做任何裁剪
 - 打开 Ponder 的编辑模式（`ponder-client.toml` 里的 `editingMode`）后，鼠标停在槽位上，tooltip 首行会显示该槽位在机器里的真实序号
 
 ## 环境
@@ -39,7 +40,8 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
 
 `slot(index)` 对应 UI 里第 index 个物品槽，`tank(index)` 对应第 index 个储罐；`withItem` / `withFluid` 的第二个参数是「面板出现后第几个 tick 开始写入」，
 写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。需要精确指向点时用 `at(vec)`（机器取该点所在方块）或 `at(vec, pos)`（指向点与机器分开给）；
-默认只画标题栏、左侧页签和机器页，`showPlayerInventory()`、`showConfigurators()`、`showCircuit()`、`showNavigationButtons()` 可以把其余部分打开，
+默认只画标题栏、左侧页签和机器页，`showPlayerInventory()`、`showConfigurators()`、`showCircuit()`、`showNavigationButtons()` 可以把其余部分打开；
+`showFullUI()` 更省事：一次性把 GT 那一整套都画上（标题栏、页签、机器页、配置器面板、提示面板、玩家背包），位置也照 GT 自己的布局，一个组件都不裁剪。
 缩放用 `scale(f)`，或用 `fitToPanel(0.42f)` 按 Ponder 面板宽度自适应。缩放也可以写在摆放那一步
 （`showUI(builder, ui, 0.6f)` 或链式 `.scale(0.6f)`），会盖过界面定义上的设定：
 

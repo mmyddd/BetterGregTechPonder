@@ -169,9 +169,13 @@ final class MachineUiPanelBuilder {
 
     /**
      * 按 MachineUI 的开关决定哪些 fancy 组件可见：玩家背包、配置器面板、提示面板等不在白名单里的一律隐藏，
-     * 标题栏上的返回与翻页按钮也一并关掉。
+     * 标题栏上的返回与翻页按钮也一并关掉；写了 {@link MachineUI#showFullUI()} 就一个都不藏。
      */
     private static void applyFancyChrome(FancyMachineUIWidget fancy, MachineUI ui) {
+        if (ui.full()) {
+            // 原版整套：GT 自己排好的组件全都留着——标题栏、页签、配置器面板、提示面板、玩家背包。
+            return;
+        }
         PlayerInventoryWidget inventory = fancy.getPlayerInventory();
         if (inventory != null) {
             if (ui.playerInventory()) {
