@@ -54,9 +54,9 @@ final class MachineUiOverlay {
 
     private MachineUiOverlay() {}
 
-    static void render(PonderScene scene, GuiGraphics graphics, PonderUI screen, MachineUiPanel panel, Vec3 anchor,
-                       Pointing pointing, float partialTicks, float fade, float scale, List<Box> boxes,
-                       float pulse) {
+    static void render(PonderScene scene, GuiGraphics graphics, PonderUI screen, MachineUiElement owner,
+                       MachineUiPanel panel, Vec3 anchor, Pointing pointing, float partialTicks, float fade,
+                       float scale, List<Box> boxes, float pulse) {
         Vec2 projected = scene.getTransform().sceneToScreen(anchor, partialTicks);
         int width = Math.round(panel.width() * scale) + PADDING * 2;
         int height = Math.round(panel.height() * scale) + PADDING * 2;
@@ -88,6 +88,8 @@ final class MachineUiOverlay {
         float contentY = boxY + dy + yFade + PADDING;
         float uiMouseX = (float) ((mouse.x - contentX) / scale) + panel.originX();
         float uiMouseY = (float) ((mouse.y - contentY) / scale) + panel.originY();
+        // 把落点交给交互层：点「查看 UI 详情」打开后，点击就是按这套换算反算回 UI 坐标的。
+        MachineUiInteraction.publish(owner, panel, contentX, contentY, scale);
 
         graphics.pose().pushPose();
         graphics.pose().translate(projected.x + dx + xFade, projected.y + dy + yFade, Z);

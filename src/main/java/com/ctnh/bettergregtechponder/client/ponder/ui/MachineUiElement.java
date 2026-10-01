@@ -113,6 +113,10 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         if (failed || finished) {
             return;
         }
+        // 观众点页签换了页面：面板的边界、槽位表与储罐表都变了，重建一份快照。
+        if (MachineUiInteraction.takeDirtyOwner() == this) {
+            panel = null;
+        }
         ticksShown++;
         MachineUiPanel current = resolve(scene);
         if (current == null) {
@@ -136,7 +140,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             return;
         }
         try {
-            MachineUiOverlay.render(scene, graphics, screen, current, anchor, pointing, partialTicks, fade,
+            MachineUiOverlay.render(scene, graphics, screen, this, current, anchor, pointing, partialTicks, fade,
                     actualScale(screen, current), outlineBoxes(current), pulse());
         } catch (Throwable t) {
             fail("rendering the machine UI", t);

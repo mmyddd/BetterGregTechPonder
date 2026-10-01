@@ -61,6 +61,19 @@ final class ConfiguratorTabs {
         return buttons;
     }
 
+    /** 配置器面板里的电路页签；没有（机器没电路槽、面板没画、或反射拿不到）就是 null。 */
+    static @Nullable ConfiguratorPanel.Tab circuitTab(@Nullable ConfiguratorPanel panel) {
+        if (panel == null) {
+            return null;
+        }
+        for (ConfiguratorPanel.Tab tab : panel.getTabs()) {
+            if (configuratorOf(tab) instanceof CircuitFancyConfigurator) {
+                return tab;
+            }
+        }
+        return null;
+    }
+
     private static boolean matches(IFancyConfigurator configurator, MachineUiPlacement.Part part) {
         return switch (part) {
             case CIRCUIT_BUTTON -> configurator instanceof CircuitFancyConfigurator;

@@ -29,7 +29,7 @@ import java.util.List;
 record MachineUiPanel(BlockEntity blockEntity, ModularUI modularUi, int originX, int originY, int width, int height,
                       MetaMachine machine, List<SlotWidget> machineSlots, List<Widget> machineTanks,
                       List<ProgressWidget> progressWidgets, @Nullable Widget circuit,
-                      @Nullable ConfiguratorPanel configurators) {
+                      @Nullable ConfiguratorPanel configurators, @Nullable Widget tabs) {
 
     /**
      * 红框要框的那些控件；这一类这台机器没有（比如没电路槽、没画配置器面板）就返回空表，
