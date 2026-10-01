@@ -120,12 +120,15 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
      * {@code showUI} 结束后机器都是干净的，上一段写的物品/流体不会带进下一段。
      */
     void restoreMachine() {
+        int slots = 0;
+        int tanks = 0;
         if (resolved != null) {
             for (int i = 0; i < written.length; i++) {
                 if (written[i] && originals[i] != null) {
                     SlotWidget slot = slotAt(resolved, writes.get(i).index());
                     if (slot != null) {
                         writeSlot(slot, originals[i].copy(), i);
+                        slots++;
                     }
                 }
             }
@@ -134,6 +137,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
                     Widget tank = tankAt(resolved, fluidWrites.get(i).index());
                     if (tank != null) {
                         writeTank(tank, fluidOriginals[i].copy(), i);
+                        tanks++;
                     }
                 }
             }
@@ -145,6 +149,10 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             fluidWritten[i] = false;
         }
         ticksShown = 0;
+        if (slots + tanks > 0) {
+            GTPonder.LOGGER.info("GTPonder: restored {} slot(s) and {} tank(s) of the machine at {}", slots, tanks,
+                    machinePos);
+        }
     }
 
     @Override

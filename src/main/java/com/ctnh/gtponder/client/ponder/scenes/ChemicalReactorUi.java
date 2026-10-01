@@ -49,38 +49,39 @@ public class ChemicalReactorUi {
                 .attachKeyFrame();
         scene.idle(20);
 
-        // 第一次调用：只画界面。
+        // 第一次调用：只画界面。注意每段的 idle 要不短于上一块面板的寿命（show + 2×5 tick 淡入淡出），
+        // 否则下一段的面板会在上一段还没淡出时就出现，看起来像「上一段的写入没被还原」。
         MachineUIs.showUI(scene, LV_CHEMICAL_REACTOR_UI).at(machinePos).show(120);
-        scene.idle(130);
+        scene.idle(140);
 
         // 第二次调用：往 0 号槽位写 64 个草方块。
         MachineUIs.showUI(scene, LV_CHEMICAL_REACTOR_UI).at(machinePos)
                 .slot(1)
                 .withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
-                .show(200);
+                .show(160);
         scene.overlay().showText(80)
                 .text("64 grass blocks go into slot 0; the panel shows the machine's real inventory.")
                 .attachKeyFrame();
-        scene.idle(120);
+        scene.idle(180);
 
         // 第三次调用：往 0 号储罐灌 1000 mB 水，数量同样从 0 在 1 秒内涨到目标值。
         MachineUIs.showUI(scene, LV_CHEMICAL_REACTOR_UI).at(machinePos)
                 .tank(0)
                 .withFluid(new FluidStack(Fluids.WATER, 1000), 20)
-                .show(200);
+                .show(160);
         scene.overlay().showText(80)
                 .text("Fluids work the same way: tank 0 fills from 0 to 1000 mB in one second.")
                 .attachKeyFrame();
-        scene.idle(120);
+        scene.idle(180);
 
         // 覆盖板是改机器状态，跟界面无关：直接挂一条场景指令，这条不画面板。
         MachineEdits.placeCover(scene, machinePos, Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack(), 10);
-        scene.idle(50);
+        scene.idle(40);
         scene.overlay().showText(70)
                 .text("Covers can be put on a chosen side as well: a conveyor on top.")
                 .pointAt(util.vector().topOf(machinePos))
                 .attachKeyFrame();
-        scene.idle(120);
+        scene.idle(150);
         scene.markAsFinished();
     }
 }
