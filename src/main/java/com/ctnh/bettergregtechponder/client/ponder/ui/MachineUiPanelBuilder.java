@@ -98,7 +98,8 @@ final class MachineUiPanelBuilder {
         BetterGregTechPonder.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s), {} tank(s)", machinePos,
                 bounds.width(), bounds.height(), bounds.x(), bounds.y(), slots.size(), tanks.size());
         return new MachineUiPanel(blockEntity, modularUi, bounds.x(), bounds.y(), bounds.width(), bounds.height(),
-                machine, slots, tanks, progress, circuitUi);
+                machine, slots, tanks, progress, circuitUi,
+                fancy == null ? null : fancy.getConfiguratorPanel());
     }
 
     /** 机器有没有可用的编程电路槽。 */

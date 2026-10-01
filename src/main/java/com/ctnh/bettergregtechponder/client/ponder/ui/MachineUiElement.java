@@ -54,6 +54,8 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private final List<MachineUiPlacement.Outline> outlines;
 
     private MachineUiPanel panel;
+    /** 每个红框只报一次「框不到」，免得每帧刷日志。 */
+    private boolean[] reportedOutlines;
     private boolean failed;
     /** 面板已经演完：时间线不再跑，免得隐藏后还被 tick 到、把自己的写入重放一遍。 */
     private boolean finished;
@@ -69,6 +71,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         this.recipeCircuit = RecipeFiller.needsCircuit(plan.recipe());
         this.scale = plan.scale();
         this.outlines = plan.outlines();
+        this.reportedOutlines = new boolean[this.outlines.size()];
     }
 
     /**
@@ -148,23 +151,40 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         return ui.fitFraction() > 0 ? ui.fitFraction() * screen.width / Math.max(1, panel.width()) : ui.scale();
     }
 
-    /** 到点的红框：取出控件的矩形（面板坐标）。 */
+    /** 到点的红框：取出控件的矩形（面板坐标）；这台机器没有那一类控件时报一行 error，只报一次。 */
     private List<MachineUiOverlay.Box> outlineBoxes(MachineUiPanel panel) {
         if (outlines.isEmpty()) {
             return List.of();
         }
         List<MachineUiOverlay.Box> boxes = new ArrayList<>();
-        for (MachineUiPlacement.Outline outline : outlines) {
+        for (int i = 0; i < outlines.size(); i++) {
+            MachineUiPlacement.Outline outline = outlines.get(i);
             if (ticksShown < outline.delayTicks()) {
                 continue;
             }
-            Widget widget = panel.part(outline);
-            if (widget != null) {
+            List<Widget> widgets = panel.parts(outline);
+            if (widgets.isEmpty()) {
+                reportMissingOutline(i, outline);
+                continue;
+            }
+            for (Widget widget : widgets) {
                 boxes.add(new MachineUiOverlay.Box(widget.getPositionX(), widget.getPositionY(),
                         widget.getSizeWidth(), widget.getSizeHeight()));
             }
         }
         return boxes;
+    }
+
+    /** 框不到就说清楚为什么：这台机器没有这一路控件，或者配置器那一列面板根本没画。 */
+    private void reportMissingOutline(int index, MachineUiPlacement.Outline outline) {
+        if (reportedOutlines[index]) {
+            return;
+        }
+        reportedOutlines[index] = true;
+        BetterGregTechPonder.LOGGER.error("BetterGregTechPonder: cannot outline the {} control of the machine at " +
+                "{}: this machine has no " +
+                "such control, or the configurator panel is not drawn (try showFullUI())", outline.part(),
+                machinePos);
     }
 
     /** 红框的呼吸：0~1 来回走，亮得有点节奏。 */

@@ -12,6 +12,7 @@
 - 编程电路 UI 默认不画：要展示的配方带 `circuitMeta(n)` 时自动画出来，也可以用 `showCircuit()` 常开；展开的设置面板占背包那一行，按钮贴在它左边、垂直居中
 - 可以给面板里的槽位、储罐、进度条、编程电路套红框，把注意力引过去
 - `showFullUI()` 能把原版 GT 的整套界面原样画出来（配置器面板、提示面板、玩家背包都在），不做任何裁剪
+- 那套界面里的工作开关、自动输出、电路设置、总线隔离也能逐个套红框；机器没有的会报一行 error
 - 打开 Ponder 的编辑模式（`ponder-client.toml` 里的 `editingMode`）后，鼠标停在槽位上，tooltip 首行会显示该槽位在机器里的真实序号
 
 ## 环境
@@ -70,8 +71,21 @@ MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI).at(pos)
         .show(160);
 ```
 
-四个都能带一个延迟参数（`outlineSlot(1, 20)`），到点才亮，一直亮到面板收起；机器没有那类控件
-（比如没电路槽、或者没画电路 UI）时那一框就不画。
+四个都能带一个延迟参数（`outlineSlot(1, 20)`），到点才亮，一直亮到面板收起。
+
+配合 `showFullUI()` 还能框 GT 配置器面板那一列里的按钮（这几个都是 GT 自己的控件，认得是哪一个看它的 tooltip）：
+
+```java
+MachineUIs.showUI(builder, FULL_REACTOR_UI).at(pos)
+        .outlinePowerToggle()    // 工作开关（电源键）
+        .outlineAutoOutput()     // 物品 / 流体自动输出开关，有几个框几个
+        .outlineCircuitButton()  // GT 自己的电路设置按钮
+        .outlineDistinct()       // 总线隔离（Distinct）
+        .show(160);
+```
+
+框不到时不静默：机器没有这一路控件、或者那一列配置器面板没画出来（默认裁剪版就没有，得用 `showFullUI()`），
+每个红框会往日志里报一行 error，面板照常画。
 
 **每段 `showUI` 演完（面板淡出时）会把机器恢复原状**——这一段写进去的物品/流体都会还原，不会带进下一段；场景回退同理。
 

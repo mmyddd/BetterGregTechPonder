@@ -153,6 +153,49 @@ public final class MachineUiPlacement {
         return this;
     }
 
+    /**
+     * 框住 GT 配置器面板里的工作开关；机器没有这个开关就报错。这几个开关都在那一列配置器面板上，
+     * 所以通常配合 {@link MachineUI#showFullUI()} 用。
+     */
+    public MachineUiPlacement outlinePowerToggle() {
+        return outlinePowerToggle(0);
+    }
+
+    public MachineUiPlacement outlinePowerToggle(int delayTicks) {
+        outlines.add(new Outline(Part.POWER, 0, Math.max(0, delayTicks)));
+        return this;
+    }
+
+    /** 框住物品 / 流体自动输出开关（有几个框几个）。 */
+    public MachineUiPlacement outlineAutoOutput() {
+        return outlineAutoOutput(0);
+    }
+
+    public MachineUiPlacement outlineAutoOutput(int delayTicks) {
+        outlines.add(new Outline(Part.AUTO_OUTPUT, 0, Math.max(0, delayTicks)));
+        return this;
+    }
+
+    /** 框住 GT 配置器面板里的电路设置按钮；要框本库画的那组电路 UI，用 {@link #outlineCircuit()}。 */
+    public MachineUiPlacement outlineCircuitButton() {
+        return outlineCircuitButton(0);
+    }
+
+    public MachineUiPlacement outlineCircuitButton(int delayTicks) {
+        outlines.add(new Outline(Part.CIRCUIT_BUTTON, 0, Math.max(0, delayTicks)));
+        return this;
+    }
+
+    /** 框住总线隔离（Distinct）开关。 */
+    public MachineUiPlacement outlineDistinct() {
+        return outlineDistinct(0);
+    }
+
+    public MachineUiPlacement outlineDistinct(int delayTicks) {
+        outlines.add(new Outline(Part.DISTINCT, 0, Math.max(0, delayTicks)));
+        return this;
+    }
+
     /** 按给定 tick 数展示面板；此前登记的写入与红框按各自延迟执行。 */
     public void show(int ticks) {
         MachineUiElement element = new MachineUiElement(new Plan(ui, anchor, pointing, machinePos, scale,
@@ -210,12 +253,21 @@ public final class MachineUiPlacement {
     /** 一次红框请求：框哪一类控件、第几个、延迟多少 tick 亮起。 */
     record Outline(Part part, int index, int delayTicks) {}
 
-    /** 面板里可以被红框框住的控件。 */
+    /** 面板里可以被红框框住的控件。后四种是 GT 配置器面板那一列里的按钮，没画那列面板就框不到。 */
     enum Part {
         SLOT,
         TANK,
         PROGRESS,
-        CIRCUIT
+        /** 本库自己画的编程电路 UI（按钮 + 展开面板）。 */
+        CIRCUIT,
+        /** GT 配置器面板里的工作开关。 */
+        POWER,
+        /** GT 配置器面板里的物品 / 流体自动输出开关，有几个框几个。 */
+        AUTO_OUTPUT,
+        /** GT 配置器面板里的电路设置按钮。 */
+        CIRCUIT_BUTTON,
+        /** GT 配置器面板里的总线隔离（Distinct）开关。 */
+        DISTINCT
     }
 
     /** 一次配方填充：配方 id 与开始入料的延迟。 */

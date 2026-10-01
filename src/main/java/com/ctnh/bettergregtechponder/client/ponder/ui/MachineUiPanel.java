@@ -3,6 +3,7 @@
 
 package com.ctnh.bettergregtechponder.client.ponder.ui;
 
+import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
@@ -27,18 +28,26 @@ import java.util.List;
  */
 record MachineUiPanel(BlockEntity blockEntity, ModularUI modularUi, int originX, int originY, int width, int height,
                       MetaMachine machine, List<SlotWidget> machineSlots, List<Widget> machineTanks,
-                      List<ProgressWidget> progressWidgets, @Nullable Widget circuit) {
+                      List<ProgressWidget> progressWidgets, @Nullable Widget circuit,
+                      @Nullable ConfiguratorPanel configurators) {
 
-    /** 红框要框的那个控件；这一类控件这台机器没有（比如没电路槽）就返回 null。 */
-    @Nullable
-    Widget part(MachineUiPlacement.Outline outline) {
+    /**
+     * 红框要框的那些控件；这一类这台机器没有（比如没电路槽、没画配置器面板）就返回空表，
+     * 交给调用方报错。自动输出那种一格一个开关的会返回多个。
+     */
+    List<Widget> parts(MachineUiPlacement.Outline outline) {
         return switch (outline.part()) {
-            case SLOT -> slot(outline.index());
-            case TANK -> tank(outline.index());
-            case PROGRESS -> outline.index() >= 0 && outline.index() < progressWidgets.size() ?
-                    progressWidgets.get(outline.index()) : null;
-            case CIRCUIT -> circuit;
+            case SLOT -> one(slot(outline.index()));
+            case TANK -> one(tank(outline.index()));
+            case PROGRESS -> one(outline.index() >= 0 && outline.index() < progressWidgets.size() ?
+                    progressWidgets.get(outline.index()) : null);
+            case CIRCUIT -> one(circuit);
+            case POWER, AUTO_OUTPUT, CIRCUIT_BUTTON, DISTINCT -> ConfiguratorTabs.buttons(configurators, outline.part());
         };
+    }
+
+    private static List<Widget> one(@Nullable Widget widget) {
+        return widget == null ? List.of() : List.of(widget);
     }
 
     /** 机器 UI 里第 index 个槽位控件；越界返回 null。 */
