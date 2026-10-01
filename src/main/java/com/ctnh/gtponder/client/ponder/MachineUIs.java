@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 // Copyright (C) 2026 mmyddd
 
-package com.ctnh.pondergtui.client.ponder;
+package com.ctnh.gtponder.client.ponder;
 
 import net.createmod.ponder.api.scene.SceneBuilder;
 
-import com.ctnh.pondergtui.client.ponder.ui.MachineUI;
-import com.ctnh.pondergtui.client.ponder.ui.MachineUiPlacement;
+import com.ctnh.gtponder.client.ponder.ui.MachineUI;
+import com.ctnh.gtponder.client.ponder.ui.MachineUiPlacement;
 
 /**
  * 场景侧入口，等价于 CTNH 的 {@code CTNHPonderSceneBuilder#showUI}：

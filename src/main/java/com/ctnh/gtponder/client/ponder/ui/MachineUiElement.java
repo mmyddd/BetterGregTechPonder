@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 // Copyright (C) 2026 mmyddd
 
-package com.ctnh.pondergtui.client.ponder.ui;
+package com.ctnh.gtponder.client.ponder.ui;
 
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
 import com.gregtechceu.gtceu.api.gui.fancy.FancyMachineUIWidget;
@@ -33,7 +33,7 @@ import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.ctnh.pondergtui.PonderGTUI;
+import com.ctnh.gtponder.GTPonder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -210,7 +210,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
                     (int) screenY);
         } catch (Throwable t) {
             // 物品 tooltip 可能来自任意模组，出错不该拖垮整个面板。
-            PonderGTUI.LOGGER.debug("MachineUI tooltip failed", t);
+            GTPonder.LOGGER.debug("MachineUI tooltip failed", t);
         }
     }
 
@@ -306,7 +306,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             return null;
         }
         if (ui.definition() != null && machine.getDefinition() != ui.definition()) {
-            PonderGTUI.LOGGER.warn("MachineUI was defined for {} but {} sits at {}", ui.definition(),
+            GTPonder.LOGGER.warn("MachineUI was defined for {} but {} sits at {}", ui.definition(),
                     machine.getDefinition(), machinePos);
         }
 
@@ -322,7 +322,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         }
         List<SlotWidget> slots = collectMachineSlots(modularUi);
         Bounds bounds = measure(root);
-        PonderGTUI.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s)", machinePos,
+        GTPonder.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s)", machinePos,
                 bounds.width(), bounds.height(), bounds.x(), bounds.y(), slots.size());
         return new Resolved(blockEntity, modularUi, bounds.x(), bounds.y(), bounds.width(), bounds.height(), slots);
     }
@@ -425,7 +425,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             return;
         }
         failed = true;
-        PonderGTUI.LOGGER.error("MachineUI element failed while {} (machine at {})", phase, machinePos, throwable);
+        GTPonder.LOGGER.error("MachineUI element failed while {} (machine at {})", phase, machinePos, throwable);
     }
 
     private record Bounds(int x, int y, int width, int height) {}

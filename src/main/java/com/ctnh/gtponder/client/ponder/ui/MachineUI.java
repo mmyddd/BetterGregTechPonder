@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 // Copyright (C) 2026 mmyddd
 
-package com.ctnh.pondergtui.client.ponder.ui;
+package com.ctnh.gtponder.client.ponder.ui;
 
 import com.gregtechceu.gtceu.api.block.IMachineBlock;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;

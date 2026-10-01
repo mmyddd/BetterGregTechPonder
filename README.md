@@ -1,4 +1,4 @@
-# Ponder GT UI
+# GT Ponder
 
 在 Create 的思索（Ponder）场景里画出 **GregTech CEu Modern 机器真实的界面**，并让场景脚本按真实槽位序号往里放物品。
 
@@ -36,8 +36,8 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
 ## 目录
 
 ```
-src/main/java/com/ctnh/pondergtui/
-├── PonderGTUI.java                     mod 入口
+src/main/java/com/ctnh/gtponder/
+├── GTPonder.java                     mod 入口
 └── client/ponder/
     ├── MachineUIs.java                 场景侧入口 showUI
     └── ui/                             MachineUI / MachineUiPlacement / MachineUiElement / ShowMachineUiInstruction
