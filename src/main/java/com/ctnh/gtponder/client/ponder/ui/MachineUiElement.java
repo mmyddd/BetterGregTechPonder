@@ -472,6 +472,10 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         }
         List<SlotWidget> slots = collectMachineSlots(modularUi);
         List<Widget> tanks = collectMachineTanks(modularUi);
+        // 储罐控件画的是自己的 lastFluidInTank 缓存，缓存只在 client-side 模式下每帧从真实储罐刷新
+        // （TankWidget#drawInBackground 里那个 if）；ponder 里没有 ModularUIGuiContainer，
+        // 不打开这个开关，储罐永远画成空的、tooltip 也一直是「空 / 0/0 mB」。
+        tanks.forEach(Widget::setClientSideWidget);
         Bounds bounds = measure(root);
         GTPonder.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s), {} tank(s)", machinePos,
                 bounds.width(), bounds.height(), bounds.x(), bounds.y(), slots.size(), tanks.size());
