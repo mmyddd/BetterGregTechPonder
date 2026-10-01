@@ -13,8 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@link MachineUI} 的一次摆放：指向点、指针方向、机器坐标与槽位写入计划。由
- * {@code CTNHPonderSceneBuilder#showUI(MachineUI)} 创建。
+ * {@link MachineUI} 的一次摆放：指向点、指针方向与槽位写入计划，由 {@code MachineUIs#showUI} 创建。
+ *
+ * <p>机器默认按指向点所在方块解析；{@link #at(BlockPos)} 直接用该方块的中心当指向点，
+ * 需要「尾巴指向这里、面板画那台机器」时用 {@link #at(Vec3, BlockPos)}。
  */
 public final class MachineUiPlacement {
 
@@ -42,8 +44,14 @@ public final class MachineUiPlacement {
         return this;
     }
 
-    /** 面板展示的机器所在方块；缺省取锚点所在方块。 */
-    public MachineUiPlacement forMachine(BlockPos machinePos) {
+    /** 指向该方块的中心，面板也展示这个方块上的机器。 */
+    public MachineUiPlacement at(BlockPos machinePos) {
+        return at(Vec3.atCenterOf(machinePos), machinePos);
+    }
+
+    /** 指向点与机器分开指定：尾巴对准 anchor，面板画 machinePos 上的机器。 */
+    public MachineUiPlacement at(Vec3 anchor, BlockPos machinePos) {
+        this.anchor = anchor;
         this.machinePos = machinePos;
         return this;
     }

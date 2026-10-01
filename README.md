@@ -24,14 +24,13 @@ private static final MachineUI LV_INPUT_BUS_UI = MachineUI.of(GTMachines.ITEM_IM
 
 // PonderStoryBoard 里
 MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
-        .at(util.vector().topOf(pos))     // 指针尖指向的场景坐标
-        .pointing(Pointing.DOWN)          // 面板落在指向点的哪一侧
-        .forMachine(pos)                  // 展示哪台机器
+        .at(pos)                          // 指向这台机器：尾巴尖落在方块中心，面板也画它
+        .pointing(Pointing.DOWN)          // 面板落在指向点的哪一侧，默认 DOWN
         .slot(0).withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
         .show(200);
 ```
 
-默认只画标题栏、左侧页签和机器页。`showPlayerInventory()`、`showConfigurators()`、`showNavigationButtons()`
+需要精确指向点时用 `at(vec)`（机器取该点所在方块）或 `at(vec, pos)`（指向点与机器分开给）。默认只画标题栏、左侧页签和机器页。`showPlayerInventory()`、`showConfigurators()`、`showNavigationButtons()`
 可以把其余部分打开；缩放用 `scale(f)`，或用 `fitToPanel(0.42f)` 按 Ponder 面板宽度自适应。
 
 ## 目录
