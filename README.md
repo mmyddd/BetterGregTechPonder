@@ -1,210 +1,219 @@
+<div align="center">
+
 # BetterGregTechPonder
 
-在 Create 的思索（Ponder）场景里画出 **GregTech CEu Modern 机器自己的界面**，并按它真实的槽位序号往里放物品、灌流体。
+**Draws a GregTech CEu Modern machine's own UI inside Create Ponder scenes, and reads and writes its items and fluids by real slot index.**
 
-- 针对官方 GTCEu 编译（`curse.maven:gregtechceu-modern-890405:7917773`），不依赖任何分支改动
-- 纯客户端库：绘制相关的类不会被服务端加载
-- 面板用 Ponder 自己的 speech box 画，指针尖指向场景里的坐标
-- 槽位序号与游戏里的机器界面一致；物品数量与储罐流体量都从 0 在 1 秒内涨到目标值
-- 往机器上贴覆盖板、把机器模型切成工作/待机，都是独立的场景指令（改机器状态），和界面无关；机器不支持时在日志里报错
-- 给一个配方 id 就能把机器填满：输入、流体、成品各就各位，面板里的进度条自己走一遍；配方要编程电路时自动写进电路槽；机器与配方对不上时报错
-- 物品/流体的自动输出口朝向也能在场景里设（顺带打开自动输出），机器不支持时报错
-- 编程电路 UI 默认不画：要展示的配方带 `circuitMeta(n)` 时自动画出来，也可以用 `showCircuit()` 常开；展开的设置面板占背包那一行，按钮贴在它左边、垂直居中
-- 可以给面板里的槽位、储罐、进度条、编程电路套红框，把注意力引过去
-- `showFullUI()` 能把原版 GT 的整套界面原样画出来（配置器面板、提示面板、玩家背包都在），不做任何裁剪
-- 那套界面里的工作开关、自动输出、电路设置、总线隔离也能逐个套红框；机器没有的会报一行 error
-- 打开 Ponder 的编辑模式（`ponder-client.toml` 里的 `editingMode`）后，鼠标停在槽位上，tooltip 首行会显示该槽位在机器里的真实序号
+English | [简体中文](README_CN.md)
 
-## 展示
+</div>
 
-**物品与流体填充** —— 序号就是机器界面里的真实槽位号，数量与液量从 0 在 1 秒内涨到目标值（gif3）：
+Draws **a GregTech CEu Modern machine's own UI** inside Create Ponder scenes, and puts items into it and fluids into its tanks by the machine's real slot indices.
 
-![物品与流体填充](<docs/showcase/items_and_fluids.gif>)
+- Built against official GTCEu (`curse.maven:gregtechceu-modern-890405:7917773`); no fork or patch is required
+- Client-side library only: nothing drawing-related is ever loaded on the server
+- Panels are drawn with Ponder's own speech box, with the pointer aimed at a coordinate in the scene
+- Slot indices match the machine UI in game; item counts and tank amounts grow from 0 to the target value within one second
+- Covers and switching the machine model between working and idle are separate scene edits (they change machine state) and have nothing to do with the panel; a machine that does not support one reports an error in the log
+- Give it a recipe id and it fills the machine for you: inputs, fluids and outputs all land where they belong and the panel's progress bar runs through once; when the recipe needs a programmed circuit it is written into the circuit slot; a machine that does not match the recipe reports an error in the log
+- Item and fluid auto-output sides can be set from a scene too (auto-output is switched on along the way); a machine that does not support it reports an error in the log
+- The programmed-circuit UI is off by default: it appears when the recipe being shown carries `circuitMeta(n)`, or it can be pinned on with `showCircuit()`; the expanded panel takes the inventory row and its button sits vertically centered on the panel's left
+- Slots, tanks, the progress bar and the circuit UI can each be boxed in red to draw the eye
+- `showFullUI()` draws GT's whole UI exactly as it is in game (configurator panel, tooltip panel, player inventory) with nothing trimmed
+- The working toggle, auto-output, circuit settings and distinct (bus isolation) buttons in that UI can be boxed one by one; a machine that lacks one reports an error line
+- With Ponder's editing mode on (`editingMode` in `ponder-client.toml`), hovering a slot shows that slot's real index in the machine as the first tooltip line
 
-**配方自动填充** —— 只给一个配方 id：入料、编程电路、成品各就各位，进度条自己走一遍（gif1）：
+## Showcase
 
-![配方自动填充](<docs/showcase/recipe_autofill.gif>)
+**Items and fluids** — the numbers are the real slot indices from the machine UI, and counts and amounts grow from 0 to the target value within one second:
 
-**UI 详情** —— 点开左下角的「查看 UI 详情」：场景冻结，原版整套界面里的配置器与开关都能直接点（gif2）：
+![Items and fluids](<docs/showcase/items_and_fluids.gif>)
 
-![UI 详情](<docs/showcase/ui_details.gif>)
+**Recipe auto-fill** — one recipe id is all it takes: inputs, programmed circuit and outputs all land where they belong and the progress bar runs through once:
 
-**机器开机** —— 工作/待机模型跟着配方进度切换，只换正面贴图（截图）：
+![Recipe auto-fill](<docs/showcase/recipe_autofill.gif>)
 
-![机器开机](<docs/showcase/machine_power_on.png>)
+**UI details** — click "Show UI details" in the bottom-left corner: the scene freezes and the configurators and switches of GT's whole UI become clickable:
 
-**覆盖板与输出方向** —— 覆盖板、自动输出口都是独立场景指令，演完自动还原（截图）：
+![UI details](<docs/showcase/ui_details.gif>)
 
-![覆盖板与输出方向](<docs/showcase/covers_and_output.png>)
+**Machine state is editable from a scene too** — the working toggle, covers and auto-output sides are not read-only: the
+working/idle model follows the recipe progress and only the front overlay changes, while recipe logic and power draw stay
+untouched:
 
-## 环境
+![Machine state is editable](<docs/showcase/machine_power_on.png>)
 
-| 依赖 | 版本 |
+**Covers and output sides work the same way** — putting a cover on a chosen side or changing an item/fluid auto-output side
+is a scene edit independent of the UI, reverted once the segment ends:
+
+![Covers and output sides are editable](<docs/showcase/covers_and_output.png>)
+
+## Environment
+
+| Dependency | Version |
 |------|------|
 | Minecraft / Forge | 1.20.1 / 47.4.1 |
-| GregTech CEu Modern | 官方 CurseForge 版本（file id 见 gradle.properties） |
+| GregTech CEu Modern | official CurseForge build (file id in `gradle.properties`) |
 | Create + Ponder | 6.0.8-291 / Ponder-Forge 1.20.1 |
 | LDLib | 1.0.52 |
 
-## 用法
+## Usage
 
 ```java
 private static final MachineUI LV_INPUT_BUS_UI = MachineUI.of(GTMachines.ITEM_IMPORT_BUS[GTValues.LV])
         .scale(0.6f);
 
-// PonderStoryBoard 里
+// inside a PonderStoryBoard
 MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
-        .at(pos)                          // 指向这台机器：尾巴尖落在方块中心，面板也画它
-        .pointing(Pointing.DOWN)          // 面板落在指向点的哪一侧，默认 DOWN
+        .at(pos)                          // point at this machine: the tail lands on the block centre, and the panel shows it too
+        .pointing(Pointing.DOWN)          // which side of the pointing target the panel sits on, DOWN by default
         .slot(0).withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
-        .tank(0).withFluid(new FluidStack(Fluids.WATER, 1000), 20)   // 储罐同理
+        .tank(0).withFluid(new FluidStack(Fluids.WATER, 1000), 20)   // tanks work the same way
         .show(200);
 ```
 
-`slot(index)` 对应 UI 里第 index 个物品槽，`tank(index)` 对应第 index 个储罐；`withItem` / `withFluid` 的第二个参数是「面板出现后第几个 tick 开始写入」，
-写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。需要精确指向点时用 `at(vec)`（机器取该点所在方块）或 `at(vec, pos)`（指向点与机器分开给）；
-默认只画标题栏、左侧页签和机器页，`showPlayerInventory()`、`showConfigurators()`、`showCircuit()`、`showNavigationButtons()` 可以把其余部分打开；
-`showFullUI()` 更省事：一次性把 GT 那一整套都画上（标题栏、页签、机器页、配置器面板、提示面板、玩家背包），位置也照 GT 自己的布局，一个组件都不裁剪。
-缩放用 `scale(f)`，或用 `fitToPanel(0.42f)` 按 Ponder 面板宽度自适应。缩放也可以写在摆放那一步
-（`showUI(builder, ui, 0.6f)` 或链式 `.scale(0.6f)`），会盖过界面定义上的设定：
+`slot(index)` is the index-th item slot in the UI and `tank(index)` the index-th tank; the second argument of `withItem` / `withFluid` is the tick at which the write starts after the panel appears, while the write itself always takes one second. Both GT's and LDLib's `TankWidget` are supported. When the pointing target has to be exact, use `at(vec)` (the machine is taken from the block that contains that point) or `at(vec, pos)` (pointing target and machine given separately);
+by default only the title bar, the side tabs and the machine page are drawn; `showPlayerInventory()`, `showConfigurators()`, `showCircuit()` and `showNavigationButtons()` switch the remaining parts on;
+`showFullUI()` is the shortcut: it draws GT's entire UI at once (title bar, tabs, machine page, configurator panel, tooltip panel, player inventory) in GT's own layout, trimming no component at all.
+Scaling is done with `scale(f)`, or with `fitToPanel(0.42f)` to fit Ponder's panel width. Scaling can also be given at the placement step
+(`showUI(builder, ui, 0.6f)` or the chained `.scale(0.6f)`), which overrides the value set on the UI definition:
 
 ```java
 MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI, 0.6f).at(pos).show(120);
 MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI).at(pos).scale(0.45f).show(120);
 ```
 
-机器有编程电路槽（`IHasCircuitSlot`）时，背包那一行可以多出一组编程电路 UI。默认不画；这段要展示的配方自己带
-`circuitMeta(n)` 时会自动画（正好看见电路被设成配方要的那一档），也可以在 `MachineUI` 上写 `showCircuit()` 常开。
-画出来时：
-展开的面板占背包原来的位置（带 GT 自己的背景与标题），左侧贴一个垂直居中的电路按钮，面板里是 GT 自己的
-0~32 编码设置格子（用的就是 GT 的 `CircuitFancyConfigurator`，只画这一个配置器，不画整个配置器面板）。
-按钮图标每帧重取，机器里的电路换了它跟着换。这里只负责画，不改机器状态；电路槽那个幽灵槽不算进 `slot(index)`，
-所以槽位序号仍与实机 UI 一致。
+When the machine has a programmed circuit slot (`IHasCircuitSlot`), the inventory row can carry an extra programmed-circuit UI. It is off by default; it appears automatically when the recipe being shown carries
+`circuitMeta(n)` (so the circuit can be seen being set to the tier the recipe wants), or it can be pinned on with `showCircuit()` on the `MachineUI`.
+When it is drawn:
+the expanded panel takes the place the inventory had (with GT's own background and title), a vertically centred circuit button sits next to it on the left, and the panel holds GT's own
+0-32 configuration grid (it is GT's `CircuitFancyConfigurator`, drawing that one configurator only and not the whole configurator panel).
+The button icon is re-read every frame, so it follows the circuit in the machine. This only draws and never changes machine state; the ghost slot of the circuit slot does not count towards `slot(index)`,
+so slot indices still match the in-game UI.
 
-想让观众看某个控件，就给它套个红框（面板像素 2px、跟着面板缩放，透明度有呼吸感）：
+To point the viewer at a control, box it in red (2 px in panel pixels, scaling with the panel, with a breathing alpha):
 
 ```java
 MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI).at(pos)
         .slot(1).withItem(stack, 20)
-        .outlineSlot(1)          // 框住 1 号槽位
-        .outlineTank(0)          // 框住 0 号储罐
-        .outlineProgress()       // 框住进度条
-        .outlineCircuit()        // 框住编程电路 UI（按钮 + 展开面板）
+        .outlineSlot(1)          // box slot 1
+        .outlineTank(0)          // box tank 0
+        .outlineProgress()       // box the progress bar
+        .outlineCircuit()        // box the circuit UI (button plus expanded panel)
         .show(160);
 ```
 
-四个都能带一个延迟参数（`outlineSlot(1, 20)`），到点才亮，一直亮到面板收起。
+All four take an optional delay (`outlineSlot(1, 20)`): the box lights up when the delay is over and stays lit until the panel is dismissed.
 
-配合 `showFullUI()` 还能框 GT 配置器面板那一列里的按钮（这几个都是 GT 自己的控件，认得是哪一个看它的 tooltip）：
+Together with `showFullUI()` the buttons in GT's configurator column can be boxed as well (they are GT's own widgets; which one is which is decided by its tooltip):
 
 ```java
 MachineUIs.showUI(builder, FULL_REACTOR_UI).at(pos)
-        .outlinePowerToggle()    // 工作开关（电源键）
-        .outlineAutoOutput()     // 物品 / 流体自动输出开关，有几个框几个
-        .outlineCircuitButton()  // GT 自己的电路设置按钮
-        .outlineDistinct()       // 总线隔离（Distinct）
+        .outlinePowerToggle()    // working toggle (power button)
+        .outlineAutoOutput()     // item and fluid auto-output toggles, one box for each that exists
+        .outlineCircuitButton()  // GT's own circuit settings button
+        .outlineDistinct()       // distinct (bus isolation)
         .show(160);
 ```
 
-框不到时不静默：机器没有这一路控件、或者那一列配置器面板没画出来（默认裁剪版就没有，得用 `showFullUI()`），
-每个红框会往日志里报一行 error，面板照常画。
+A box that cannot be placed is never silent: when the machine lacks that control, or that configurator column was not drawn (the trimmed UI has none by default, so `showFullUI()` is needed),
+each red box reports one error line in the log while the panel is drawn as usual.
 
-**每段 `showUI` 演完（面板淡出时）会把机器恢复原状**——这一段写进去的物品/流体都会还原，不会带进下一段；场景回退同理。
+**Every `showUI` segment restores the machine when it finishes (as the panel fades out)** — items written and fluids filled during that segment are reverted and never leak into the next segment; scene rollback behaves the same way.
 
-给一个配方 id，入料、流体、成品与进度条都由它安排：
+Give it a recipe id and it takes care of inputs, fluids, outputs and the progress bar:
 
 ```java
 MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI).at(machinePos)
-        .recipe("gtceu:chemical_reactor/sodium_sulfide", 10)   // 入料 1 秒 → 进度条 1 秒 → 成品 1 秒
+        .recipe("gtceu:chemical_reactor/sodium_sulfide", 10)   // 1 s of inputs -> 1 s of progress -> 1 s of outputs
         .show(200);
 ```
 
-配方 id 就是 JEI 里那条配方，形如 `<模组>:<配方类型路径>/<配方名>`。输入的物品进输入槽、流体进输入储罐，
-成品等进度条走完再落进输出槽与输出储罐；哪些槽位和储罐算输入、哪些算输出，看的是 GT 自己打的 `IngredientIO` 标签，
-不用猜顺序。机器与配方对不上（不是配方机器、配方 id 不存在、配方类型不属于这台机器、面板里没有对应的槽位）时，
-在日志里报一行 error 并跳过这一段，面板照常画；`show(...)` 的时长要留够 3 秒（入料、进度条、成品各 1 秒）。
+The recipe id is the one JEI shows for that recipe, shaped like `<mod>:<recipe type path>/<recipe name>`. Input items go into input slots and input fluids into input tanks;
+outputs land in output slots and output tanks once the progress bar has run through. Which slots and tanks count as input and which as output is decided by the `IngredientIO` tags GT itself puts on them,
+so there is no guessing about order. When the machine and the recipe do not match (not a recipe machine, unknown recipe id, recipe type not belonging to this machine, no matching slot in the panel) it
+reports one error line in the log and skips the segment while the panel is still drawn; the `show(...)` duration has to allow for 3 seconds (1 s of inputs, 1 s of progress, 1 s of outputs).
 
-配方里带 `circuitMeta(n)` 时，那一档编程电路会自动写进机器的电路槽（面板下方那组编码设置 UI 读的就是它），
-入料的同时生效，面板收起或场景回退时还原；机器没有电路槽则在日志里报一行 error，料照常填。
+When the recipe carries `circuitMeta(n)`, that programmed circuit tier is written into the machine's circuit slot automatically (which is what the configuration UI below the panel reads),
+it takes effect together with the inputs, and it is reverted when the panel is dismissed or the scene rolls back; if the machine has no circuit slot it reports one error line in the log and fills the inputs as usual.
 
-配方跑起来时机器模型会跟着进度条自动开关机：进度条一开始走就切成工作中的样子，走到头立刻切回待机
-（判断方式与 `setWorkingModel` 相同），面板收起或场景回退也会还原。
+While the recipe runs, the machine model follows the progress bar automatically: it switches to the working look as soon as the bar starts and back to idle the moment it ends
+(decided the same way as `setWorkingModel`), and it is also reverted when the panel is dismissed or the scene rolls back.
 
-改机器状态用独立的场景指令，不挂在界面上，因此不受上面的还原影响：
+Machine state is changed by independent scene edits that are not attached to the panel, so they are not affected by the restore described above:
 
 ```java
 MachineEdits.placeCover(builder, pos, Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack());
-MachineEdits.placeCover(builder, pos, Direction.NORTH, GTCovers.PUMPS[1], 40);   // 也可以直接给定义
+MachineEdits.placeCover(builder, pos, Direction.NORTH, GTCovers.PUMPS[1], 40);   // a definition works too
 ```
 
-贴不上时（机器没有覆盖板容器、这一面放不了、覆盖板拒绝附着）会在日志里报一行 error 并跳过这一条，场景继续播。
+When a cover cannot be placed (no cover container on the machine, that side rejects it, the cover refuses to attach) it reports one error line in the log, skips that entry and the scene plays on.
 
-自动输出口同样是改机器状态：
+Auto-output sides are machine state as well:
 
 ```java
-MachineEdits.setItemOutput(builder, pos, Direction.UP);         // 物品走顶面
-MachineEdits.setFluidOutput(builder, pos, Direction.SOUTH, 40); // 流体走南面，40 tick 后
-MachineEdits.setAutoOutput(builder, pos, Direction.NORTH);      // 两个一起设
+MachineEdits.setItemOutput(builder, pos, Direction.UP);         // items leave through the top
+MachineEdits.setFluidOutput(builder, pos, Direction.SOUTH, 40); // fluids leave through the south, 40 ticks later
+MachineEdits.setAutoOutput(builder, pos, Direction.NORTH);      // both at once
 ```
 
-设置朝向时会顺带把这一路自动输出打开（GT 的模型会给输出面画箭头，自动输出开着再多一个标记）；
-机器不支持这种输出时在日志里报一行 error 并跳过。场景回退时朝向与开关都还原。
-箭头画在机器的哪一面，场景里记得用 `scene.rotateCameraY(180)`（CTNH 那边的场景也是这么转的）
-把镜头转过去，不然背对镜头的那几面看不见。
+Setting a side also switches that auto-output path on (GT's model draws an arrow on the output side and an extra marker while auto-output is on);
+when the machine does not support that kind of output it reports one error line in the log and skips it. Sides and switches are both reverted when the scene rolls back.
+Remember to turn the camera towards the side the arrow is drawn on with `scene.rotateCameraY(180)` (the scene on the CTNH side does the same), otherwise the sides facing away are invisible.
 
-机器模型也能单独切成工作中的样子：
+The machine model can also be switched to the working look on its own:
 
 ```java
-MachineEdits.setWorkingModel(builder, pos, true, 20);    // 正面亮起运行中的贴图
-MachineEdits.setWorkingModel(builder, pos, false, 20);   // 回到待机
+MachineEdits.setWorkingModel(builder, pos, true, 20);    // light up the running front overlay
+MachineEdits.setWorkingModel(builder, pos, false, 20);   // back to idle
 ```
 
-只改模型状态（可工作机器是 `RECIPE_LOGIC_STATUS`，少数机器是 `IS_ACTIVE`），配方逻辑、进度、耗电、面板里的工作开关都原样不动；
-机器模型没有工作/待机状态时在日志里报一行 error 并跳过。场景回退时模型也会还原。
+Only the model state is changed (a recipe-capable machine uses `RECIPE_LOGIC_STATUS`, a few machines use `IS_ACTIVE`); recipe logic, progress, power draw and the working toggle in the panel stay untouched;
+when the machine model has no working/idle state it reports one error line in the log and skips it. The model is reverted when the scene rolls back.
 
-## 示例场景
+## Example scene
 
-`bettergregtechponder:chemical_reactor_ui` 用的是 LV 化学反应釜：第一步只画界面；第二步往 1 号槽位写 64 个草方块、2 号槽位写 64 个玻璃；
-第三步往 0 号储罐灌 1000 mB 水；第四步不画面板，直接用场景指令在顶面贴一条传送带覆盖板；
-第五步把机器模型切成工作中的样子再切回待机；第六步只给一个配方 id，面板自己把 1 个碳粉与 4000 mB 氢气填进去、
-把电路设成配方要的 1，进度条走完、1000 mB 甲烷出来。第四、五步演示的是机器改动与界面无关。
+`bettergregtechponder:chemical_reactor_ui` uses the LV chemical reactor: the first step draws the UI alone; the second writes 64 grass blocks into slot 1 and 64 glass into slot 2;
+the third fills tank 0 with 1000 mB of water; the fourth draws no panel at all and puts a conveyor cover on the top side with a scene edit;
+the fifth switches the machine model to the working look and back to idle; the sixth gives one recipe id and the panel fills in 1 carbon dust and 4000 mB of hydrogen by itself,
+sets the circuit to the tier the recipe wants, runs the progress bar through and produces 1000 mB of methane. Steps four and five are there to show that machine edits are independent of the UI.
 
-- 游戏里：JEI 搜 "LV Chemical Reactor"，悬停按 **W**（或者 `/ponder bettergregtechponder:chemical_reactor_ui`）
-- storyboard：`assets/bettergregtechponder/ponder/chemical_reactor_ui/common.nbt`（3x3 地板 + (1,1,1) 的 `gtceu:lv_chemical_reactor`）
-- 本地运行的开发依赖里带了 JEI 与 JustEnoughCharacters（拼音搜索），方便从 JEI 直接开思索
-- `en_us` 由 `gradlew runData` 生成到 `src/generated/resources`，key 与正文都由 Ponder 从场景脚本里收（`<modid>.ponder.<场景 id>.header|text_N`），不用手写；
-  `zh_cn` 手写在 `src/main/resources/assets/bettergregtechponder/lang/`，datagen 不管它
-- 示例只在开发环境注册（`BetterGregTechPonderPlugin#exampleScenesEnabled`）：正式 jar 里默认不注册，可用 `-Dbettergregtechponder.exampleScenes=true|false` 强制开关
+- In game: search JEI for "LV Chemical Reactor", hover it and press **W** (or use `/ponder bettergregtechponder:chemical_reactor_ui`)
+- storyboard: `assets/bettergregtechponder/ponder/chemical_reactor_ui/common.nbt` (3x3 floor plus `gtceu:lv_chemical_reactor` at (1,1,1))
+- The development dependencies bundled for local runs include JEI and JustEnoughCharacters (pinyin search), so a ponder can be opened straight from JEI
+- `en_us` is generated into `src/generated/resources` by `gradlew runData`; both the keys and the text are collected by Ponder from the scene script (`<modid>.ponder.<scene id>.header|text_N`), so nothing is written by hand;
+  `zh_cn` is written by hand in `src/main/resources/assets/bettergregtechponder/lang/` and datagen leaves it alone
+- The example is registered in development environments only (`BetterGregTechPonderPlugin#exampleScenesEnabled`): a release jar does not register it, and `-Dbettergregtechponder.exampleScenes=true|false` forces it either way
 
-## 目录
+## Layout
 
 ```
 src/main/java/com/ctnh/bettergregtechponder/
-├── BetterGregTechPonder.java                      mod 入口
+├── BetterGregTechPonder.java                      mod entry point
 ├── client/
-│   ├── BetterGregTechPonderClient.java            客户端入口，把场景插件交给 Ponder
+│   ├── BetterGregTechPonderClient.java            client entry point, hands the scene plugin to Ponder
 │   └── ponder/
-│       ├── MachineUIs.java            场景侧入口 showUI
-│       ├── BetterGregTechPonderPlugin.java  场景注册
-│       ├── machine/                   机器改动：MachineEdit / CoverChange / WorkingModelChange / MachineEditInstruction / MachineEdits
-│       ├── scenes/ChemicalReactorUi.java  示例场景
+│       ├── MachineUIs.java            scene-side entry point, showUI
+│       ├── BetterGregTechPonderPlugin.java  scene registration
+│       ├── machine/                   machine edits: MachineEdit / CoverChange / WorkingModelChange / MachineEditInstruction / MachineEdits
+│       ├── scenes/ChemicalReactorUi.java  example scene
 │       └── ui/
-│           ├── MachineUI.java            界面描述对象（缩放、画哪些 fancy 组件）
-│           ├── MachineUiPlacement.java   摆放：at / pointing / slot / tank / recipe / show
-│           ├── MachineUiElement.java     叠加层元素：按坐标解析、跑时间线
-│           ├── MachineUiPanelBuilder.java 建面板：白名单、边界、收集槽位/储罐/进度条
-│           ├── MachineUiPanel.java       面板快照 + 槽位/储罐读写
-│           ├── MachineUiWrites.java      写入时间线：0 → 目标值、原样还原
-│           ├── RecipeFiller.java         配方 id → 入料、成品、进度条
-│           ├── MachineUiOverlay.java     speech box 与 tooltip 绘制
-│           └── ShowMachineUiInstruction.java  展示与收尾指令
+│           ├── MachineUI.java            UI description object (scale, which fancy components to draw)
+│           ├── MachineUiPlacement.java   placement: at / pointing / slot / tank / recipe / show
+│           ├── MachineUiElement.java     overlay element: resolves by coordinate, runs the timeline
+│           ├── MachineUiPanelBuilder.java builds the panel: whitelist, bounds, collects slots/tanks/progress bar
+│           ├── MachineUiPanel.java       panel snapshot plus slot and tank access
+│           ├── MachineUiWrites.java      write timeline: 0 -> target value, restored afterwards
+│           ├── RecipeFiller.java         recipe id -> inputs, outputs, progress bar
+│           ├── MachineUiOverlay.java     speech box and tooltip drawing
+│           └── ShowMachineUiInstruction.java  show and teardown instructions
 └── datagen/
-    └── BetterGregTechPonderDatagen.java           en_us 生成，文案由 Ponder 从场景里收
+    └── BetterGregTechPonderDatagen.java          en_us generation, text collected by Ponder from the scenes
 ```
 
-## 许可
+## License
 
-**GNU General Public License v3.0（GPL-3.0）**：[LICENSE](<LICENSE>)
+**GNU General Public License v3.0 (GPL-3.0)**: [LICENSE](<LICENSE>)
 
 > **BetterGregTechPonder - Copyright and License Notice**
 >
