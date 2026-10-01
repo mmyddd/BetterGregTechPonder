@@ -7,21 +7,16 @@ import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import net.minecraft.core.BlockPos;
 
 /**
- * 思索时间线上的一段「改机器」操作：到点后作用于目标机器，场景回退时还原。
+ * 一段「改机器状态」的操作：作用在目标机器上，场景回退时还原。
  *
- * <p>UI 那边只按 tick 驱动它，不关心改的是什么；覆盖板是其中一种实现（{@link CoverChange}）。
+ * <p>什么时候执行由 {@link MachineEditInstruction} 决定，它跟 UI 没关系——面板画不画、画在哪，
+ * 都不影响机器改动。
  */
 public interface MachineEdit {
-
-    /** 面板出现多少 tick 后执行。 */
-    int delayTicks();
-
-    /** 是否已经执行过。失败也算执行过，免得每 tick 重复报一次错。 */
-    boolean isApplied();
 
     /** 执行；机器不支持时自行报错，不要抛出去。 */
     void apply(MetaMachine machine, BlockPos machinePos);
 
-    /** 场景回退时还原；没执行过的什么都不用做。 */
+    /** 场景回退时还原，没执行过的什么都不用做。 */
     default void revert(MetaMachine machine, BlockPos machinePos) {}
 }

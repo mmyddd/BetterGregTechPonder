@@ -36,7 +36,6 @@ import net.minecraft.world.phys.Vec3;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.ctnh.gtponder.GTPonder;
-import com.ctnh.gtponder.client.ponder.machine.MachineEdit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,15 +73,13 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private final boolean[] written;
     /** 各写入槽位在首次写入前的内容，回退时按它还原。 */
     private final ItemStack[] originals;
-    /** 时间线上的机器改动（覆盖板等），由各自实现决定怎么执行与还原。 */
-    private final List<MachineEdit> edits;
 
     private Resolved resolved;
     private boolean failed;
     private int ticksShown;
 
     MachineUiElement(MachineUI ui, Vec3 anchor, Pointing pointing, BlockPos machinePos,
-                     List<MachineUiPlacement.SlotWrite> writes, List<MachineEdit> edits) {
+                     List<MachineUiPlacement.SlotWrite> writes) {
         this.ui = ui;
         this.anchor = anchor;
         this.pointing = pointing;
@@ -90,7 +87,6 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         this.writes = writes;
         this.written = new boolean[writes.size()];
         this.originals = new ItemStack[writes.size()];
-        this.edits = edits;
     }
 
     /**
@@ -110,7 +106,6 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             }
             written[i] = false;
         }
-        revertMachineEdits(resolved);
         resolved = null;
     }
 
@@ -126,7 +121,6 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         }
         current.modularUi().mainGroup.updateScreen();
         applyScheduledWrites(current);
-        applyMachineEdits(current);
     }
 
     @Override
@@ -286,26 +280,6 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         }
     }
 
-    /** 机器改动时间线：到点后交给各自的 {@link MachineEdit}，怎么执行、怎么报错由它自己决定。 */
-    private void applyMachineEdits(Resolved current) {
-        for (MachineEdit edit : edits) {
-            if (edit.isApplied() || ticksShown < edit.delayTicks()) {
-                continue;
-            }
-            edit.apply(current.machine(), machinePos);
-        }
-    }
-
-    /** 回退时让每条机器改动还原自己动过的东西。 */
-    private void revertMachineEdits(Resolved current) {
-        if (current == null) {
-            return;
-        }
-        for (MachineEdit edit : edits) {
-            edit.revert(current.machine(), machinePos);
-        }
-    }
-
     private static SlotWidget slotAt(Resolved current, int index) {
         if (index < 0 || index >= current.machineSlots().size()) {
             return null;
@@ -369,8 +343,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         Bounds bounds = measure(root);
         GTPonder.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s)", machinePos,
                 bounds.width(), bounds.height(), bounds.x(), bounds.y(), slots.size());
-        return new Resolved(blockEntity, machine, modularUi, bounds.x(), bounds.y(), bounds.width(), bounds.height(),
-                slots);
+        return new Resolved(blockEntity, modularUi, bounds.x(), bounds.y(), bounds.width(), bounds.height(), slots);
     }
 
     /**
@@ -476,6 +449,6 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
 
     private record Bounds(int x, int y, int width, int height) {}
 
-    private record Resolved(BlockEntity blockEntity, MetaMachine machine, ModularUI modularUi, int originX,
-                            int originY, int width, int height, List<SlotWidget> machineSlots) {}
+    private record Resolved(BlockEntity blockEntity, ModularUI modularUi, int originX, int originY, int width,
+                            int height, List<SlotWidget> machineSlots) {}
 }

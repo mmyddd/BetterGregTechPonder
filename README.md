@@ -6,7 +6,7 @@
 - 纯客户端库：服务端加载本 mod 不会触碰任何绘制类
 - 面板用 Ponder 自己的 speech box 画，指针尖指向场景里的坐标
 - 槽位序号与实机 UI 一致；放入时数量从 0 在 1 秒内叠到目标值
-- 可以指定面和覆盖板，往机器上贴覆盖板；机器不支持时在日志里报错
+- 往机器上贴覆盖板是独立的场景指令（改机器状态），和界面无关；机器不支持时在日志里报错
 - 打开 Ponder 的编辑模式（`ponder-client.toml` 里的 `editingMode`）后，鼠标停在槽位上，tooltip 首行会显示该槽位在机器里的真实序号
 
 ## 环境
@@ -32,15 +32,11 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
         .show(200);
 ```
 
-覆盖板同理，写在 `show()` 之前：
+覆盖板是改机器状态，用独立的场景指令，不挂在界面上：
 
 ```java
-MachineUIs.showUI(builder, MY_UI)
-        .at(pos)
-        .cover(Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack())            // 直接给覆盖板物品
-        .cover(Direction.NORTH, new ResourceLocation("gtceu", "pump.lv"), 40) // 也可以给 id（分级覆盖板带等级后缀）
-        .slot(0).withItem(stack, 20)
-        .show(200);
+MachineEdits.placeCover(builder, pos, Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack());
+MachineEdits.placeCover(builder, pos, Direction.NORTH, GTCovers.PUMPS[1], 40);   // 也可以直接给定义
 ```
 
 贴不上时（机器没有覆盖板容器、这一面放不了、覆盖板拒绝附着）会在日志里报一行 error 并跳过这一条，场景继续播。
@@ -49,7 +45,8 @@ MachineUIs.showUI(builder, MY_UI)
 
 ## 示例场景
 
-`gtponder:input_bus_ui` 用的是 ULV 输入总线：画一遍界面、往 0 号槽位写 64 个草方块、再在顶面贴一条传送带覆盖板。
+`gtponder:input_bus_ui` 用的是 ULV 输入总线：第一步只画界面，第二步往 0 号槽位写 64 个草方块，
+第三步不画面板、直接用场景指令在顶面贴一条传送带覆盖板（演示机器改动与界面无关）。
 
 - 游戏里：JEI 搜 "ULV Input Bus"，悬停按 **W**（或者 `/ponder gtponder:input_bus_ui`）
 - storyboard：`assets/gtponder/ponder/input_bus_ui/common.nbt`（3x3 地板 + (1,1,1) 的 `gtceu:ulv_input_bus`）
@@ -66,7 +63,7 @@ src/main/java/com/ctnh/gtponder/
     └── ponder/
         ├── MachineUIs.java             场景侧入口 showUI
         ├── GTPonderPonderPlugin.java   场景注册
-        ├── machine/                    时间线上的机器改动：MachineEdit / CoverChange
+        ├── machine/                    机器改动：MachineEdit / CoverChange / MachineEditInstruction / MachineEdits
         ├── scenes/InputBusUi.java      示例场景
         └── ui/                         MachineUI / MachineUiPlacement / MachineUiElement / ShowMachineUiInstruction
 ```

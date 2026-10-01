@@ -4,6 +4,7 @@
 package com.ctnh.gtponder.client.ponder.scenes;
 
 import com.ctnh.gtponder.client.ponder.MachineUIs;
+import com.ctnh.gtponder.client.ponder.machine.MachineEdits;
 import com.ctnh.gtponder.client.ponder.ui.MachineUI;
 
 import com.gregtechceu.gtceu.api.GTValues;
@@ -61,13 +62,9 @@ public class InputBusUi {
                 .attachKeyFrame();
         scene.idle(120);
 
-        // 第三次调用：在机器顶面贴一条传送带覆盖板，直接给覆盖板物品。
-        // 指向点比方块中心低一点，免得 speech box 的小尾巴正好压在顶面的覆盖板上。
-        Vec3 lower = util.vector().centerOf(busPos).add(0, -0.35, 0);
-        MachineUIs.showUI(scene, ULV_INPUT_BUS_UI).at(lower, busPos)
-                .cover(Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack(), 10)
-                .show(140);
-        scene.idle(40);
+        // 覆盖板是改机器状态，跟界面无关：直接挂一条场景指令，这条不画面板。
+        MachineEdits.placeCover(scene, busPos, Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack(), 10);
+        scene.idle(50);
         scene.overlay().showText(70)
                 .text("Covers can be put on a chosen side as well: a conveyor on top.")
                 .pointAt(util.vector().topOf(busPos))
