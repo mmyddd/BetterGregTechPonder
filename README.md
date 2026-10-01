@@ -25,28 +25,28 @@ Draws **a GregTech CEu Modern machine's own UI** inside Create Ponder scenes, an
 
 ## Showcase
 
-[**Items and fluids**](<#example-usage>) — the numbers are the real slot indices from the machine UI, and counts and amounts grow from 0 to the target value within one second (see the [example usage](<#example-usage>) below):
+**Items and fluids** — the numbers are the real slot indices from the machine UI, and counts and amounts grow from 0 to the target value within one second (see the [example usage](<#example-usage>) below):
 
-[![Items and fluids](<docs/showcase/items_and_fluids.gif>)](<#example-usage>)
+![Items and fluids](<docs/showcase/items_and_fluids.gif>)
 
-[**Recipe auto-fill**](<#example-usage>) — one recipe id is all it takes: inputs, programmed circuit and outputs all land where they belong and the progress bar runs through once (see the [example usage](<#example-usage>) below):
+**Recipe auto-fill** — one recipe id is all it takes: inputs, programmed circuit and outputs all land where they belong and the progress bar runs through once (see the [example usage](<#example-usage>) below):
 
-[![Recipe auto-fill](<docs/showcase/recipe_autofill.gif>)](<#example-usage>)
+![Recipe auto-fill](<docs/showcase/recipe_autofill.gif>)
 
-[**UI details**](<#example-usage>) — click "Show UI details" in the bottom-left corner: the scene freezes and the configurators and switches of GT's whole UI become clickable (see the [example usage](<#example-usage>) below):
+**UI details** — click "Show UI details" in the bottom-left corner: the scene freezes and the configurators and switches of GT's whole UI become clickable (see the [example usage](<#example-usage>) below):
 
-[![UI details](<docs/showcase/ui_details.gif>)](<#example-usage>)
+![UI details](<docs/showcase/ui_details.gif>)
 
-[**Machine state is editable from a scene too**](<#example-usage>) — the working toggle, covers and auto-output sides are not read-only: the
+**Machine state is editable from a scene too** — the working toggle, covers and auto-output sides are not read-only: the
 working/idle model follows the recipe progress and only the front overlay changes, while recipe logic and power draw stay
 untouched (see the [example usage](<#example-usage>) below):
 
-[![Machine state is editable](<docs/showcase/machine_power_on.png>)](<#example-usage>)
+![Machine state is editable](<docs/showcase/machine_power_on.png>)
 
-[**Covers and output sides work the same way**](<#example-usage>) — putting a cover on a chosen side or changing an item/fluid auto-output side
+**Covers and output sides work the same way** — putting a cover on a chosen side or changing an item/fluid auto-output side
 is a scene edit independent of the UI, reverted once the segment ends (see the [example usage](<#example-usage>) below):
 
-[![Covers and output sides are editable](<docs/showcase/covers_and_output.png>)](<#example-usage>)
+![Covers and output sides are editable](<docs/showcase/covers_and_output.png>)
 
 ## Environment
 
