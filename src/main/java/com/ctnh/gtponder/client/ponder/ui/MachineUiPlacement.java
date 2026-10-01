@@ -5,7 +5,13 @@ package com.ctnh.gtponder.client.ponder.ui;
 
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.scene.SceneBuilder;
+import com.ctnh.gtponder.client.ponder.machine.CoverChange;
+import com.ctnh.gtponder.client.ponder.machine.MachineEdit;
+
+import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
@@ -23,6 +29,8 @@ public final class MachineUiPlacement {
     private final SceneBuilder builder;
     private final MachineUI ui;
     private final List<SlotWrite> writes = new ArrayList<>();
+    /** 时间线上的机器改动：覆盖板等，UI 只负责按 tick 驱动。 */
+    private final List<MachineEdit> edits = new ArrayList<>();
     private Vec3 anchor = Vec3.ZERO;
     private Pointing pointing = Pointing.DOWN;
     private BlockPos machinePos;
@@ -56,6 +64,26 @@ public final class MachineUiPlacement {
         return this;
     }
 
+    /** 在指定面放一块覆盖板，覆盖板用 GT 的注册 id 指定，例如 {@code gtceu:conveyor}。 */
+    public MachineUiPlacement cover(Direction side, ResourceLocation coverId) {
+        return cover(side, coverId, 0);
+    }
+
+    /** 面板出现 delayTicks 个 tick 后再放这块覆盖板。 */
+    public MachineUiPlacement cover(Direction side, ResourceLocation coverId, int delayTicks) {
+        edits.add(new CoverChange(side, coverId, delayTicks));
+        return this;
+    }
+
+    /** 同上，直接给 {@link CoverDefinition}。 */
+    public MachineUiPlacement cover(Direction side, CoverDefinition cover) {
+        return cover(side, cover, 0);
+    }
+
+    public MachineUiPlacement cover(Direction side, CoverDefinition cover, int delayTicks) {
+        return cover(side, cover.getId(), delayTicks);
+    }
+
     /** 第 index 个机器槽位，顺序与 UI 里槽位的排列一致，也就是实机 UI 里的真实槽位序号。 */
     public SlotTarget slot(int index) {
         return new SlotTarget(index);
@@ -63,7 +91,8 @@ public final class MachineUiPlacement {
 
     /** 按给定 tick 数展示面板；此前登记的槽位写入按各自延迟执行。 */
     public void show(int ticks) {
-        MachineUiElement element = new MachineUiElement(ui, anchor, pointing, machinePos, List.copyOf(writes));
+        MachineUiElement element = new MachineUiElement(ui, anchor, pointing, machinePos, List.copyOf(writes),
+                List.copyOf(edits));
         builder.addInstruction(new ShowMachineUiInstruction(element, ticks));
     }
 
