@@ -16,10 +16,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@link MachineUI} 的一次摆放：指向点、指针方向与槽位写入计划，由 {@code MachineUIs#showUI} 创建。
+ * {@link MachineUI} 的一次摆放：指向点、指针方向、缩放、槽位写入与红框计划，由 {@code MachineUIs#showUI} 创建。
  *
  * <p>机器默认按指向点所在方块解析；{@link #at(BlockPos)} 直接用该方块的中心当指向点，
  * 需要「尾巴指向这里、面板画那台机器」时用 {@link #at(Vec3, BlockPos)}。
+ *
+ * <pre>{@code
+ * MachineUIs.showUI(scene, LV_CHEMICAL_REACTOR_UI).at(machinePos)
+ *         .slot(1).withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
+ *         .outlineSlot(1)
+ *         .show(160);
+ * }</pre>
  */
 public final class MachineUiPlacement {
 
@@ -27,6 +34,7 @@ public final class MachineUiPlacement {
     private final MachineUI ui;
     private final List<SlotWrite> writes = new ArrayList<>();
     private final List<FluidWrite> fluids = new ArrayList<>();
+    private final List<Outline> outlines = new ArrayList<>();
     private Vec3 anchor = Vec3.ZERO;
     private Pointing pointing = Pointing.DOWN;
     private BlockPos machinePos;
@@ -104,10 +112,53 @@ public final class MachineUiPlacement {
         return this;
     }
 
-    /** 按给定 tick 数展示面板；此前登记的槽位写入按各自延迟执行。 */
+    /** 给第 index 个机器槽位套一个红框，面板一出现就亮，一直亮到面板收起。 */
+    public MachineUiPlacement outlineSlot(int index) {
+        return outlineSlot(index, 0);
+    }
+
+    /** delayTicks 个 tick 后亮起。 */
+    public MachineUiPlacement outlineSlot(int index, int delayTicks) {
+        outlines.add(new Outline(Part.SLOT, index, Math.max(0, delayTicks)));
+        return this;
+    }
+
+    /** 给第 index 个机器储罐套一个红框。 */
+    public MachineUiPlacement outlineTank(int index) {
+        return outlineTank(index, 0);
+    }
+
+    public MachineUiPlacement outlineTank(int index, int delayTicks) {
+        outlines.add(new Outline(Part.TANK, index, Math.max(0, delayTicks)));
+        return this;
+    }
+
+    /** 框住面板里的进度条。 */
+    public MachineUiPlacement outlineProgress() {
+        return outlineProgress(0);
+    }
+
+    public MachineUiPlacement outlineProgress(int delayTicks) {
+        outlines.add(new Outline(Part.PROGRESS, 0, Math.max(0, delayTicks)));
+        return this;
+    }
+
+    /** 框住编程电路 UI（按钮与展开的设置面板一起框）。 */
+    public MachineUiPlacement outlineCircuit() {
+        return outlineCircuit(0);
+    }
+
+    public MachineUiPlacement outlineCircuit(int delayTicks) {
+        outlines.add(new Outline(Part.CIRCUIT, 0, Math.max(0, delayTicks)));
+        return this;
+    }
+
+    /** 按给定 tick 数展示面板；此前登记的写入与红框按各自延迟执行。 */
     public void show(int ticks) {
-        MachineUiElement element = new MachineUiElement(ui, anchor, pointing, machinePos, List.copyOf(writes),
-                List.copyOf(fluids), recipeId == null ? null : new RecipeFill(recipeId, recipeDelayTicks), scale);
+        MachineUiElement element = new MachineUiElement(new Plan(ui, anchor, pointing, machinePos, scale,
+                List.copyOf(writes), List.copyOf(fluids), recipeId == null ? null : new RecipeFill(recipeId,
+                        recipeDelayTicks),
+                List.copyOf(outlines)));
         builder.addInstruction(new ShowMachineUiInstruction(element, ticks));
     }
 
@@ -149,6 +200,22 @@ public final class MachineUiPlacement {
             writes.add(new SlotWrite(index, stack.copy(), Math.max(0, delayTicks)));
             return MachineUiPlacement.this;
         }
+    }
+
+    /** 一次摆放的完整快照，交给 {@link MachineUiElement} 跑。 */
+    record Plan(MachineUI ui, Vec3 anchor, Pointing pointing, BlockPos machinePos, float scale,
+                List<SlotWrite> slots, List<FluidWrite> fluids, @Nullable RecipeFill recipe,
+                List<Outline> outlines) {}
+
+    /** 一次红框请求：框哪一类控件、第几个、延迟多少 tick 亮起。 */
+    record Outline(Part part, int index, int delayTicks) {}
+
+    /** 面板里可以被红框框住的控件。 */
+    enum Part {
+        SLOT,
+        TANK,
+        PROGRESS,
+        CIRCUIT
     }
 
     /** 一次配方填充：配方 id 与开始入料的延迟。 */

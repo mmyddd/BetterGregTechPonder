@@ -27,7 +27,19 @@ import java.util.List;
  */
 record MachineUiPanel(BlockEntity blockEntity, ModularUI modularUi, int originX, int originY, int width, int height,
                       MetaMachine machine, List<SlotWidget> machineSlots, List<Widget> machineTanks,
-                      List<ProgressWidget> progressWidgets) {
+                      List<ProgressWidget> progressWidgets, @Nullable Widget circuit) {
+
+    /** 红框要框的那个控件；这一类控件这台机器没有（比如没电路槽）就返回 null。 */
+    @Nullable
+    Widget part(MachineUiPlacement.Outline outline) {
+        return switch (outline.part()) {
+            case SLOT -> slot(outline.index());
+            case TANK -> tank(outline.index());
+            case PROGRESS -> outline.index() >= 0 && outline.index() < progressWidgets.size() ?
+                    progressWidgets.get(outline.index()) : null;
+            case CIRCUIT -> circuit;
+        };
+    }
 
     /** 机器 UI 里第 index 个槽位控件；越界返回 null。 */
     @Nullable

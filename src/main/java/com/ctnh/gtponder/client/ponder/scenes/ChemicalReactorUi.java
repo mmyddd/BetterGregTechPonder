@@ -65,6 +65,7 @@ public class ChemicalReactorUi {
                 .withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
                 .slot(2)
                 .withItem(new ItemStack(Items.GLASS, 64), 20)
+                .outlineSlot(1, 20)
                 .show(160);
         scene.overlay().showText(80)
                 .text("64 grass blocks go into slot 1 and 64 glass into slot 2; the panel shows the machine's real inventory.")
@@ -104,6 +105,7 @@ public class ChemicalReactorUi {
         MachineUIs.showUI(scene, LV_CHEMICAL_REACTOR_UI).at(machinePos)
                 .scale(0.3F)
                 .recipe("gtceu:chemical_reactor/methane_from_elements", 10)
+                .outlineProgress(20)
                 .show(160);
         scene.overlay().showText(80)
                 .text("One recipe id does the rest: the panel fills the inputs, sets the circuit it needs, runs while the bar moves, then drops the product in.")

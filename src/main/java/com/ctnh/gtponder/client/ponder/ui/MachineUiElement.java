@@ -6,6 +6,8 @@ package com.ctnh.gtponder.client.ponder.ui;
 import com.ctnh.gtponder.GTPonder;
 import com.ctnh.gtponder.client.ponder.machine.MachineEdits;
 
+import com.lowdragmc.lowdraglib.gui.widget.Widget;
+
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.foundation.PonderScene;
 import net.createmod.ponder.foundation.element.AnimatedOverlayElementBase;
@@ -17,11 +19,12 @@ import net.minecraft.world.phys.Vec3;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 把机器真实的 UI 画进思索场景的叠加层元素：面板画成 Ponder 的 speech box，指针尖指向场景里的锚点，
- * 并按时间线把物品与流体写进指定槽位、储罐。
+ * 按时间线把物品与流体写进指定槽位、储罐，需要时还会给面板里的控件套红框。
  *
  * <p>
  * 机器实例在渲染/运行期按坐标解析，不跨重播持有；场景重播（{@code PonderScene#begin()} 会重建
@@ -47,6 +50,8 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private final boolean recipeCircuit;
     /** 这次摆放的缩放；0 表示用界面定义自己的 scale / fitToPanel。 */
     private final float scale;
+    /** 红框计划：框哪一类控件、第几个、延迟多少 tick 亮起。 */
+    private final List<MachineUiPlacement.Outline> outlines;
 
     private MachineUiPanel panel;
     private boolean failed;
@@ -54,17 +59,16 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private boolean finished;
     private int ticksShown;
 
-    MachineUiElement(MachineUI ui, Vec3 anchor, Pointing pointing, BlockPos machinePos,
-                     List<MachineUiPlacement.SlotWrite> writes, List<MachineUiPlacement.FluidWrite> fluidWrites,
-                     @Nullable MachineUiPlacement.RecipeFill recipe, float scale) {
-        this.ui = ui;
-        this.anchor = anchor;
-        this.pointing = pointing;
-        this.machinePos = machinePos == null ? BlockPos.containing(anchor) : machinePos;
-        this.writes = new MachineUiWrites(this.machinePos, writes, fluidWrites);
-        this.recipe = recipe == null ? null : new RecipeFiller(recipe, this.machinePos);
-        this.recipeCircuit = RecipeFiller.needsCircuit(recipe);
-        this.scale = scale;
+    MachineUiElement(MachineUiPlacement.Plan plan) {
+        this.ui = plan.ui();
+        this.anchor = plan.anchor();
+        this.pointing = plan.pointing();
+        this.machinePos = plan.machinePos() == null ? BlockPos.containing(plan.anchor()) : plan.machinePos();
+        this.writes = new MachineUiWrites(this.machinePos, plan.slots(), plan.fluids());
+        this.recipe = plan.recipe() == null ? null : new RecipeFiller(plan.recipe(), this.machinePos);
+        this.recipeCircuit = RecipeFiller.needsCircuit(plan.recipe());
+        this.scale = plan.scale();
+        this.outlines = plan.outlines();
     }
 
     /**
@@ -130,7 +134,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         }
         try {
             MachineUiOverlay.render(scene, graphics, screen, current, anchor, pointing, partialTicks, fade,
-                    actualScale(screen, current));
+                    actualScale(screen, current), outlineBoxes(current), pulse());
         } catch (Throwable t) {
             fail("rendering the machine UI", t);
         }
@@ -142,6 +146,30 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             return scale;
         }
         return ui.fitFraction() > 0 ? ui.fitFraction() * screen.width / Math.max(1, panel.width()) : ui.scale();
+    }
+
+    /** 到点的红框：取出控件的矩形（面板坐标）。 */
+    private List<MachineUiOverlay.Box> outlineBoxes(MachineUiPanel panel) {
+        if (outlines.isEmpty()) {
+            return List.of();
+        }
+        List<MachineUiOverlay.Box> boxes = new ArrayList<>();
+        for (MachineUiPlacement.Outline outline : outlines) {
+            if (ticksShown < outline.delayTicks()) {
+                continue;
+            }
+            Widget widget = panel.part(outline);
+            if (widget != null) {
+                boxes.add(new MachineUiOverlay.Box(widget.getPositionX(), widget.getPositionY(),
+                        widget.getSizeWidth(), widget.getSizeHeight()));
+            }
+        }
+        return boxes;
+    }
+
+    /** 红框的呼吸：0~1 来回走，亮得有点节奏。 */
+    private float pulse() {
+        return (float) ((Math.sin(ticksShown * 0.25) + 1) / 2);
     }
 
     /** 按坐标取面板；BlockEntity 换了（重播、跳步）就重建一次，写入与配方也跟着重来。 */

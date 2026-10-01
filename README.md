@@ -10,6 +10,7 @@
 - 给一个配方 id 就能把机器填满：输入、流体、成品各就各位，面板里的进度条自己走一遍；配方要编程电路时自动写进电路槽；机器与配方对不上时报错
 - 物品/流体的自动输出口朝向也能在场景里设（顺带打开自动输出），机器不支持时报错
 - 编程电路 UI 默认不画：要展示的配方带 `circuitMeta(n)` 时自动画出来，也可以用 `showCircuit()` 常开；展开的设置面板占背包那一行，按钮贴在它左边、垂直居中
+- 可以给面板里的槽位、储罐、进度条、编程电路套红框，把注意力引过去
 - 打开 Ponder 的编辑模式（`ponder-client.toml` 里的 `editingMode`）后，鼠标停在槽位上，tooltip 首行会显示该槽位在机器里的真实序号
 
 ## 环境
@@ -54,6 +55,21 @@ MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI).at(pos).scale(0.45f).show(120
 0~32 编码设置格子（用的就是 GT 的 `CircuitFancyConfigurator`，只画这一个配置器，不画整个配置器面板）。
 按钮图标每帧重取，机器里的电路换了它跟着换。这里只负责画，不改机器状态；电路槽那个幽灵槽不算进 `slot(index)`，
 所以槽位序号仍与实机 UI 一致。
+
+想让观众看某个控件，就给它套个红框（面板像素 2px、跟着面板缩放，透明度有呼吸感）：
+
+```java
+MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI).at(pos)
+        .slot(1).withItem(stack, 20)
+        .outlineSlot(1)          // 框住 1 号槽位
+        .outlineTank(0)          // 框住 0 号储罐
+        .outlineProgress()       // 框住进度条
+        .outlineCircuit()        // 框住编程电路 UI（按钮 + 展开面板）
+        .show(160);
+```
+
+四个都能带一个延迟参数（`outlineSlot(1, 20)`），到点才亮，一直亮到面板收起；机器没有那类控件
+（比如没电路槽、或者没画电路 UI）时那一框就不画。
 
 **每段 `showUI` 演完（面板淡出时）会把机器恢复原状**——这一段写进去的物品/流体都会还原，不会带进下一段；场景回退同理。
 

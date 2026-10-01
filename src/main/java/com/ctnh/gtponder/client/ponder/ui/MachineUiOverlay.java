@@ -41,6 +41,8 @@ final class MachineUiOverlay {
     private static final int DIVOT_SPAN = 10;
     /** 面板离屏幕边缘至少留出的像素。 */
     private static final int MARGIN = 6;
+    /** 红框的边框粗细（面板像素，跟着面板一起缩）。 */
+    private static final int BOX_THICKNESS = 2;
     /** 编辑模式下贴在槽位 tooltip 首行的序号，参数是机器里的真实槽位序号。 */
     private static final String SLOT_INDEX_KEY = "gtponder.tooltip.slot_index";
     /** 同上，储罐的序号。 */
@@ -49,7 +51,8 @@ final class MachineUiOverlay {
     private MachineUiOverlay() {}
 
     static void render(PonderScene scene, GuiGraphics graphics, PonderUI screen, MachineUiPanel panel, Vec3 anchor,
-                       Pointing pointing, float partialTicks, float fade, float scale) {
+                       Pointing pointing, float partialTicks, float fade, float scale, List<Box> boxes,
+                       float pulse) {
         Vec2 projected = scene.getTransform().sceneToScreen(anchor, partialTicks);
         int width = Math.round(panel.width() * scale) + PADDING * 2;
         int height = Math.round(panel.height() * scale) + PADDING * 2;
@@ -95,11 +98,35 @@ final class MachineUiOverlay {
         RenderSystem.setShaderColor(1, 1, 1, fade);
         panel.modularUi().mainGroup.drawInBackground(graphics, Math.round(uiMouseX), Math.round(uiMouseY),
                 partialTicks);
+        // 红框叠在面板之上，仍在同一套缩放与淡入里，所以跟着面板一起缩、一起淡。
+        drawBoxes(graphics, boxes, pulse);
         RenderSystem.setShaderColor(1, 1, 1, 1);
         graphics.pose().popPose();
 
         renderTooltips(graphics, panel, uiMouseX, uiMouseY, mouse.x, mouse.y);
     }
+
+    /** 红框：面板坐标里的空心方框，透明度跟着 pulse 呼吸。 */
+    private static void drawBoxes(GuiGraphics graphics, List<Box> boxes, float pulse) {
+        if (boxes.isEmpty()) {
+            return;
+        }
+        int alpha = 0x80 + Math.round(0x7F * pulse);
+        int color = (alpha << 24) | 0xFF3020;
+        for (Box box : boxes) {
+            int x0 = box.x() - 1;
+            int y0 = box.y() - 1;
+            int x1 = box.x() + box.width() + 1;
+            int y1 = box.y() + box.height() + 1;
+            graphics.fill(x0, y0, x1, y0 + BOX_THICKNESS, color);
+            graphics.fill(x0, y1 - BOX_THICKNESS, x1, y1, color);
+            graphics.fill(x0, y0 + BOX_THICKNESS, x0 + BOX_THICKNESS, y1 - BOX_THICKNESS, color);
+            graphics.fill(x1 - BOX_THICKNESS, y0 + BOX_THICKNESS, x1, y1 - BOX_THICKNESS, color);
+        }
+    }
+
+    /** 面板坐标里的一个矩形，红框用。 */
+    record Box(int x, int y, int width, int height) {}
 
     /** 真实指针位置，换算成 PonderUI 的 GUI 坐标（同 PonderUI 里 MouseHandler#xpos 的换算）。 */
     private static Vec2 guiMouse() {

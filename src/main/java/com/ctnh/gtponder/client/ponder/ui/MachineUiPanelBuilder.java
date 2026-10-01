@@ -93,14 +93,12 @@ final class MachineUiPanelBuilder {
         // 否则画的是初始化那一刻的 lastProgressValue，永远是 0。
         progress.forEach(Widget::setClientSideWidget);
         // 槽位收集完再挂电路 UI：它的幽灵槽不算进 slot(index) 里，序号跟实机 UI 保持一致。
-        if (circuit) {
-            attachCircuit(machine, root, inventory);
-        }
+        Widget circuitUi = circuit ? attachCircuit(machine, root, inventory) : null;
         Bounds bounds = measure(root);
         GTPonder.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s), {} tank(s)", machinePos,
                 bounds.width(), bounds.height(), bounds.x(), bounds.y(), slots.size(), tanks.size());
         return new MachineUiPanel(blockEntity, modularUi, bounds.x(), bounds.y(), bounds.width(), bounds.height(),
-                machine, slots, tanks, progress);
+                machine, slots, tanks, progress, circuitUi);
     }
 
     /** 机器有没有可用的编程电路槽。 */
@@ -114,10 +112,12 @@ final class MachineUiPanelBuilder {
      * <p>展开的面板自己带 GT 的背景与标题（跟 {@code ConfiguratorPanel} 里那个浮层一样），里面是 GT 自己的
      * {@link CircuitFancyConfigurator}：上面幽灵电路槽、下面 0~32 的格子。按钮图标每帧重取，所以电路换了
      * 按钮与格子里的东西也跟着换；这里只画，不改机器状态。
+     *
+     * @return 按钮与展开面板合成的那一组（{@code outlineCircuit()} 框的就是它）；没画就返回 null
      */
-    private static void attachCircuit(MetaMachine machine, Widget root, @Nullable Widget inventory) {
+    private static @Nullable Widget attachCircuit(MetaMachine machine, Widget root, @Nullable Widget inventory) {
         if (!(root instanceof WidgetGroup parent) || !(machine instanceof IHasCircuitSlot holder)) {
-            return;
+            return null;
         }
         Widget content = root instanceof FancyMachineUIWidget fancy ? fancy.getPageContainer() : root;
         // 水平方向对背包那一行居中；竖直方向挂在整块面板下方，与它之间留出 speech box 的底色，
@@ -136,10 +136,8 @@ final class MachineUiPanelBuilder {
         view.addWidget(new ImageWidget(BORDER + 5, BORDER, body.getSizeWidth() - TAB_SIZE - 5, TAB_SIZE - BORDER,
                 new TextTexture(configurator.getTitle().getString()).setType(TextTexture.TextType.LEFT_HIDE)
                         .setWidth(body.getSizeWidth() - TAB_SIZE)));
-        parent.addWidget(view);
-
         // 按钮贴在展开面板的左边，跟它垂直居中（GT 实机里那一列也是贴着配置器面板的左边）。
-        parent.addWidget(new Widget(view.getPositionX() - TAB_SIZE - 2,
+        Widget button = new Widget(view.getPositionX() - TAB_SIZE - 2,
                 view.getPositionY() + (view.getSizeHeight() - TAB_SIZE) / 2, TAB_SIZE, TAB_SIZE) {
 
             @Override
@@ -151,7 +149,22 @@ final class MachineUiPanelBuilder {
                 configurator.getIcon().draw(graphics, mouseX, mouseY, getPositionX() + getSizeWidth() - 20,
                         getPositionY() + 4, 16, 16);
             }
-        });
+        };
+
+        // 两个控件合成一组：红框（outlineCircuit）框的是整组，位置也随组一起算。
+        int minX = Math.min(view.getPositionX(), button.getPositionX());
+        int minY = Math.min(view.getPositionY(), button.getPositionY());
+        int maxX = Math.max(view.getPositionX() + view.getSizeWidth(),
+                button.getPositionX() + button.getSizeWidth());
+        int maxY = Math.max(view.getPositionY() + view.getSizeHeight(),
+                button.getPositionY() + button.getSizeHeight());
+        WidgetGroup group = new WidgetGroup(minX, minY, maxX - minX, maxY - minY);
+        view.setSelfPosition(view.getPositionX() - minX, view.getPositionY() - minY);
+        button.setSelfPosition(button.getPositionX() - minX, button.getPositionY() - minY);
+        group.addWidget(view);
+        group.addWidget(button);
+        parent.addWidget(group);
+        return group;
     }
 
     /**
