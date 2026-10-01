@@ -8,6 +8,7 @@
 - 槽位序号与游戏里的机器界面一致；物品数量与储罐流体量都从 0 在 1 秒内涨到目标值
 - 往机器上贴覆盖板、把机器模型切成工作/待机，都是独立的场景指令（改机器状态），和界面无关；机器不支持时在日志里报错
 - 给一个配方 id 就能把机器填满：输入、流体、成品各就各位，面板里的进度条自己走一遍；机器与配方对不上时报错
+- 物品/流体的自动输出口朝向也能在场景里设（顺带打开自动输出），机器不支持时报错
 - 打开 Ponder 的编辑模式（`ponder-client.toml` 里的 `editingMode`）后，鼠标停在槽位上，tooltip 首行会显示该槽位在机器里的真实序号
 
 ## 环境
@@ -65,6 +66,17 @@ MachineEdits.placeCover(builder, pos, Direction.NORTH, GTCovers.PUMPS[1], 40);  
 ```
 
 贴不上时（机器没有覆盖板容器、这一面放不了、覆盖板拒绝附着）会在日志里报一行 error 并跳过这一条，场景继续播。
+
+自动输出口同样是改机器状态：
+
+```java
+MachineEdits.setItemOutput(builder, pos, Direction.UP);         // 物品走顶面
+MachineEdits.setFluidOutput(builder, pos, Direction.SOUTH, 40); // 流体走南面，40 tick 后
+MachineEdits.setAutoOutput(builder, pos, Direction.NORTH);      // 两个一起设
+```
+
+设置朝向时会顺带把这一路自动输出打开（GT 的模型会给输出面画箭头，自动输出开着再多一个标记）；
+机器不支持这种输出时在日志里报一行 error 并跳过。场景回退时朝向与开关都还原。
 
 机器模型也能单独切成工作中的样子：
 

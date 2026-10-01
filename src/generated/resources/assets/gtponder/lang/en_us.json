@@ -6,6 +6,7 @@
   "gtponder.ponder.chemical_reactor_ui.text_4": "Covers can be put on a chosen side as well: a conveyor on top.",
   "gtponder.ponder.chemical_reactor_ui.text_5": "The model can be switched between working and idle: only the front overlay changes, the recipe logic is left alone.",
   "gtponder.ponder.chemical_reactor_ui.text_6": "One recipe id does the rest: the panel fills the inputs, the machine runs while the progress bar moves, then the product drops in.",
+  "gtponder.ponder.chemical_reactor_ui.text_7": "Auto-output sides are machine state as well: items leave through the top, fluids through the south side.",
   "gtponder.tooltip.slot_index": "slot %s",
   "gtponder.tooltip.tank_index": "tank %s"
 }

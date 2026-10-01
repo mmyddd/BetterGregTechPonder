@@ -6,6 +6,7 @@
   "gtponder.ponder.chemical_reactor_ui.text_4": "覆盖板也能指定面：顶面放一条传送带。",
   "gtponder.ponder.chemical_reactor_ui.text_5": "模型可以单独切成工作中或待机：只换正面贴图，配方逻辑不动。",
   "gtponder.ponder.chemical_reactor_ui.text_6": "只给一个配方 id 就够了：面板自己入料，进度条走着的时候机器就是工作状态，走完成品落进输出槽。",
+  "gtponder.ponder.chemical_reactor_ui.text_7": "自动输出口也是机器状态：物品走顶面、流体走南面。",
   "gtponder.tooltip.slot_index": "槽位 %s",
   "gtponder.tooltip.tank_index": "储罐 %s"
 }

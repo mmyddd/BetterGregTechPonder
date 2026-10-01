@@ -23,7 +23,8 @@ import net.minecraftforge.fluids.FluidStack;
 /**
  * 示例场景：把 LV 化学反应釜真实的 fancy UI 画在机器上方，往 1 号槽位写 64 个草方块、2 号槽位写 64 个玻璃、
  * 0 号储罐灌 1000 mB 水，在顶面贴一条传送带覆盖板，把机器模型切成工作中的样子再切回待机，
- * 最后只给一个配方 id，让面板自己把料填好、进度条走一遍（走着的时候机器自己切到工作状态）、成品出来。
+ * 给一个配方 id 让面板自己把料填好、进度条走一遍（走着的时候机器自己切到工作状态）、成品出来，
+ * 最后把物品与流体的自动输出口分别设到顶面与南面。
  *
  * <p>storyboard 是 3x3 地板 + (1,1,1) 的 {@code gtceu:lv_chemical_reactor}（facing=north）。
  *
@@ -107,6 +108,16 @@ public class ChemicalReactorUi {
                 .text("One recipe id does the rest: the panel fills the inputs, the machine runs while the progress bar moves, then the product drops in.")
                 .attachKeyFrame();
         scene.idle(180);
+
+        // 第七次：设自动输出口。物品走顶面、流体走南面，机器模型上会亮出对应面的箭头。
+        MachineEdits.setItemOutput(scene, machinePos, Direction.UP, 10);
+        MachineEdits.setFluidOutput(scene, machinePos, Direction.SOUTH, 10);
+        scene.idle(40);
+        scene.overlay().showText(70)
+                .text("Auto-output sides are machine state as well: items leave through the top, fluids through the south side.")
+                .pointAt(util.vector().centerOf(machinePos))
+                .attachKeyFrame();
+        scene.idle(150);
         scene.markAsFinished();
     }
 }

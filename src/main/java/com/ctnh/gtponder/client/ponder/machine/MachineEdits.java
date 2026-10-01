@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
  * <pre>{@code
  * MachineEdits.placeCover(scene, busPos, Direction.UP, GTItems.CONVEYOR_MODULE_LV.asStack());
  * MachineEdits.setWorkingModel(scene, machinePos, true, 20);
+ * MachineEdits.setItemOutput(scene, machinePos, Direction.UP, 20);
  * }</pre>
  */
 public final class MachineEdits {
@@ -61,5 +62,33 @@ public final class MachineEdits {
     /** delayTicks 个 tick 后换外观。 */
     public static void setWorkingModel(SceneBuilder scene, BlockPos machinePos, boolean working, int delayTicks) {
         add(scene, machinePos, new WorkingModelChange(working), delayTicks);
+    }
+
+    /** 把物品自动输出口设到某个面，顺带打开物品自动输出。 */
+    public static void setItemOutput(SceneBuilder scene, BlockPos machinePos, Direction side) {
+        setItemOutput(scene, machinePos, side, 0);
+    }
+
+    /** delayTicks 个 tick 后设置。 */
+    public static void setItemOutput(SceneBuilder scene, BlockPos machinePos, Direction side, int delayTicks) {
+        add(scene, machinePos, new AutoOutputChange(side, true, false), delayTicks);
+    }
+
+    /** 把流体自动输出口设到某个面，顺带打开流体自动输出。 */
+    public static void setFluidOutput(SceneBuilder scene, BlockPos machinePos, Direction side) {
+        setFluidOutput(scene, machinePos, side, 0);
+    }
+
+    public static void setFluidOutput(SceneBuilder scene, BlockPos machinePos, Direction side, int delayTicks) {
+        add(scene, machinePos, new AutoOutputChange(side, false, true), delayTicks);
+    }
+
+    /** 物品与流体一起设到同一面。 */
+    public static void setAutoOutput(SceneBuilder scene, BlockPos machinePos, Direction side) {
+        setAutoOutput(scene, machinePos, side, 0);
+    }
+
+    public static void setAutoOutput(SceneBuilder scene, BlockPos machinePos, Direction side, int delayTicks) {
+        add(scene, machinePos, new AutoOutputChange(side, true, true), delayTicks);
     }
 }
