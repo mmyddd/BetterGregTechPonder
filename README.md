@@ -15,6 +15,28 @@
 - 那套界面里的工作开关、自动输出、电路设置、总线隔离也能逐个套红框；机器没有的会报一行 error
 - 打开 Ponder 的编辑模式（`ponder-client.toml` 里的 `editingMode`）后，鼠标停在槽位上，tooltip 首行会显示该槽位在机器里的真实序号
 
+## 展示
+
+**物品与流体填充** —— 序号就是机器界面里的真实槽位号，数量与液量从 0 在 1 秒内涨到目标值（gif3）：
+
+![物品与流体填充](<docs/showcase/items_and_fluids.gif>)
+
+**配方自动填充** —— 只给一个配方 id：入料、编程电路、成品各就各位，进度条自己走一遍（gif1）：
+
+![配方自动填充](<docs/showcase/recipe_autofill.gif>)
+
+**UI 详情** —— 点开左下角的「查看 UI 详情」：场景冻结，原版整套界面里的配置器与开关都能直接点（gif2）：
+
+![UI 详情](<docs/showcase/ui_details.gif>)
+
+**机器开机** —— 工作/待机模型跟着配方进度切换，只换正面贴图（截图）：
+
+![机器开机](<docs/showcase/machine_power_on.png>)
+
+**覆盖板与输出方向** —— 覆盖板、自动输出口都是独立场景指令，演完自动还原（截图）：
+
+![覆盖板与输出方向](<docs/showcase/covers_and_output.png>)
+
 ## 环境
 
 | 依赖 | 版本 |
