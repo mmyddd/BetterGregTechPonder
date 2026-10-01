@@ -54,6 +54,7 @@ MachineUIs.showUI(builder, MY_UI)
 - 游戏里：JEI 搜 "ULV Input Bus"，悬停按 **W**（或者 `/ponder gtponder:input_bus_ui`）
 - storyboard：`assets/gtponder/ponder/input_bus_ui/common.nbt`（3x3 地板 + (1,1,1) 的 `gtceu:ulv_input_bus`）
 - 本地运行的开发依赖里带了 JEI 与 JustEnoughCharacters（拼音搜索），方便从 JEI 直接开思索
+- 示例只在开发环境注册（`GTPonderPonderPlugin#exampleScenesEnabled`）：正式 jar 里默认不注册，可用 `-Dgtponder.exampleScenes=true|false` 强制开关
 
 ## 目录
 
