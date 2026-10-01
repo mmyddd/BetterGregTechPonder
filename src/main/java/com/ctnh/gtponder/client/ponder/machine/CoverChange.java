@@ -84,10 +84,18 @@ public final class CoverChange implements MachineEdit {
                 report(machinePos, "this side of the machine cannot take a cover");
                 return;
             }
-            previous = coverable.getCoverAtSide(side);
-            if (!coverable.placeCoverOnSide(side, coverItem, cover, null)) {
+            CoverBehavior behavior = cover.createCoverBehavior(coverable, side);
+            if (!behavior.canAttach()) {
                 report(machinePos, "the cover refused to attach, the machine may lack the capability it needs");
+                return;
             }
+            // 不走 ICoverable#placeCoverOnSide：它结尾会 notifyBlockUpdate + scheduleNeighborShapeUpdate，
+            // 在 Ponder 的假世界里这会连锁触发邻居更新（日志刷 "Too many chained neighbor updates"）。
+            // 这里只改状态，画面交给场景重画。
+            replaceCover(coverable, side);
+            behavior.onAttached(coverItem, null);
+            behavior.onLoad();
+            coverable.setCoverAtSide(behavior, side);
         } catch (Throwable t) {
             GTPonder.LOGGER.error("GTPonder: {} on the {} side of the machine at {} threw", describe(), side, machinePos,
                     t);
@@ -104,14 +112,20 @@ public final class CoverChange implements MachineEdit {
         if (coverable == null) {
             return;
         }
-        if (previous == null) {
-            coverable.removeCover(false, side, null);
-        } else {
+        replaceCover(coverable, side);
+        if (previous != null) {
             coverable.setCoverAtSide(previous, side);
-            coverable.notifyBlockUpdate();
-            coverable.markDirty();
         }
         previous = null;
+    }
+
+    /** 换掉这一面现有的覆盖板：只做状态层面的清理，不通知方块更新，也不掉物品。 */
+    private static void replaceCover(ICoverable coverable, Direction side) {
+        CoverBehavior current = coverable.getCoverAtSide(side);
+        if (current != null) {
+            current.onRemoved();
+            coverable.setCoverAtSide(null, side);
+        }
     }
 
     private String describe() {
