@@ -75,7 +75,7 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
 ```
 
 `slot(index)` 对应 UI 里第 index 个物品槽，`tank(index)` 对应第 index 个储罐；`withItem` / `withFluid` 的第二个参数是「面板出现后第几个 tick 开始写入」，
-写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。需要精确指向点时用 `at(vec)`（机器取该点所在方块）或 `at(vec, pos)`（指向点与机器分开给）；
+写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。需要精确指向点时把箭头与机器分开给：`at(vec)` 只定箭头，`machinePos(pos)` 指定画哪台机器；`at(pos)` 是一次到位（指向方块中心并画该方块上的机器）；
 默认只画标题栏、左侧页签和机器页，`showPlayerInventory()`、`showConfigurators()`、`showCircuit()`、`showNavigationButtons()` 可以把其余部分打开；
 `showFullUI()` 更省事：一次性把 GT 那一整套都画上（标题栏、页签、机器页、配置器面板、提示面板、玩家背包），位置也照 GT 自己的布局，一个组件都不裁剪。
 缩放用 `scale(f)`，或用 `fitToPanel(0.42f)` 按 Ponder 面板宽度自适应。缩放也可以写在摆放那一步

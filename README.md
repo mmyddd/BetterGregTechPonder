@@ -75,7 +75,7 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
         .show(200);
 ```
 
-`slot(index)` is the index-th item slot in the UI and `tank(index)` the index-th tank; the second argument of `withItem` / `withFluid` is the tick at which the write starts after the panel appears, while the write itself always takes one second. Both GT's and LDLib's `TankWidget` are supported. When the pointing target has to be exact, use `at(vec)` (the machine is taken from the block that contains that point) or `at(vec, pos)` (pointing target and machine given separately);
+`slot(index)` is the index-th item slot in the UI and `tank(index)` the index-th tank; the second argument of `withItem` / `withFluid` is the tick at which the write starts after the panel appears, while the write itself always takes one second. Both GT's and LDLib's `TankWidget` are supported. When the pointing target has to be exact, give the arrow and the machine separately: `at(vec)` sets only the arrow and `machinePos(pos)` says which machine to draw; `at(pos)` is the one-step form that points at a block centre and draws that machine;
 by default only the title bar, the side tabs and the machine page are drawn; `showPlayerInventory()`, `showConfigurators()`, `showCircuit()` and `showNavigationButtons()` switch the remaining parts on;
 `showFullUI()` is the shortcut: it draws GT's entire UI at once (title bar, tabs, machine page, configurator panel, tooltip panel, player inventory) in GT's own layout, trimming no component at all.
 Scaling is done with `scale(f)`, or with `fitToPanel(0.42f)` to fit Ponder's panel width. Scaling can also be given at the placement step
