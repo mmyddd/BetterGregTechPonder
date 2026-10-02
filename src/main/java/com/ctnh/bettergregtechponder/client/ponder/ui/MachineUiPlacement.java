@@ -69,23 +69,20 @@ public final class MachineUiPlacement {
         return this;
     }
 
-    /** 只指定展示哪台机器，指向点保持原样：{@code at(anchor).forMachine(pos)}。 */
-    public MachineUiPlacement forMachine(BlockPos blockPos) {
+    /**
+     * 指定这次画哪台机器的界面。与 {@link #at(Vec3)} 分工：{@code at} 只管箭头指向哪，
+     * 机器位置一律由这里给（或者用一步到位的 {@link #at(BlockPos)}）。
+     */
+    public MachineUiPlacement machinePos(BlockPos blockPos) {
         this.machinePos = blockPos;
         return this;
     }
 
-    /** 指向该方块的中心，面板也展示这个方块上的机器。 */
+    /** 一步到位：指向该方块的中心，也画这个方块上的机器（等价于 {@code at(中心).machinePos(该方块)}）。 */
     public MachineUiPlacement at(BlockPos machinePos) {
-        return at(Vec3.atCenterOf(machinePos), machinePos);
+        return at(Vec3.atCenterOf(machinePos)).machinePos(machinePos);
     }
 
-    /** 指向点与机器分开指定：尾巴对准 anchor，面板画 machinePos 上的机器。 */
-    public MachineUiPlacement at(Vec3 anchor, BlockPos machinePos) {
-        this.anchor = anchor;
-        this.machinePos = machinePos;
-        return this;
-    }
 
     /** 第 index 个机器槽位，顺序与 UI 里槽位的排列一致，也就是游戏里这台机器的真实槽位序号。 */
     public SlotTarget slot(int index) {

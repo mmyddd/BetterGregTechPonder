@@ -69,7 +69,14 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         this.ui = plan.ui();
         this.anchor = plan.anchor();
         this.pointing = plan.pointing();
-        this.machinePos = plan.machinePos() == null ? BlockPos.containing(plan.anchor()) : plan.machinePos();
+        this.machinePos = plan.machinePos();
+        if (this.machinePos == null) {
+            // 以前这里会把锚点所在的那一格当作机器，指向点写在机器上方时就会静默解析到空气上。
+            // 现在不猜了：没写机器位置就报一行错、这一段什么都不画。
+            BetterGregTechPonder.LOGGER.error("BetterGregTechPonder: this UI segment has no machine position - call .machinePos(pos), or use the "
+                    + "one-step at(machinePos); nothing is drawn for this segment");
+            this.failed = true;
+        }
         this.writes = new MachineUiWrites(this.machinePos, plan.slots(), plan.fluids());
         this.recipe = plan.recipe() == null ? null : new RecipeFiller(plan.recipe(), this.machinePos);
         this.recipeCircuit = RecipeFiller.needsCircuit(plan.recipe());
