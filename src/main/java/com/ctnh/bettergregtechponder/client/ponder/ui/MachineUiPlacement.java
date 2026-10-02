@@ -112,6 +112,23 @@ public final class MachineUiPlacement {
         return this;
     }
 
+    /**
+     * 框住某一类控件。这是唯一需要对外扩展的入口：新增一类控件只要在 {@link Part} 里加一个值，
+     * 再在面板里把它收集起来，这里的公共 API 一行都不用动。
+     *
+     * <p>
+     * {@code index} 只对「有顺序」的类别有意义（槽位、储罐、机器页按钮按收集顺序编号）；
+     * 语义类（编程电路 UI、配置器面板里的那几个开关）忽略它，传 0 即可。
+     */
+    public MachineUiPlacement outline(Part part, int index, int delayTicks) {
+        outlines.add(new Outline(part, index, Math.max(0, delayTicks)));
+        return this;
+    }
+
+    public MachineUiPlacement outline(Part part, int index) {
+        return outline(part, index, 0);
+    }
+
     /** 给第 index 个机器槽位套一个红框，面板一出现就亮，一直亮到面板收起。 */
     public MachineUiPlacement outlineSlot(int index) {
         return outlineSlot(index, 0);
@@ -119,8 +136,7 @@ public final class MachineUiPlacement {
 
     /** delayTicks 个 tick 后亮起。 */
     public MachineUiPlacement outlineSlot(int index, int delayTicks) {
-        outlines.add(new Outline(Part.SLOT, index, Math.max(0, delayTicks)));
-        return this;
+        return outline(Part.SLOT, index, delayTicks);
     }
 
     /** 给第 index 个机器储罐套一个红框。 */
@@ -129,8 +145,7 @@ public final class MachineUiPlacement {
     }
 
     public MachineUiPlacement outlineTank(int index, int delayTicks) {
-        outlines.add(new Outline(Part.TANK, index, Math.max(0, delayTicks)));
-        return this;
+        return outline(Part.TANK, index, delayTicks);
     }
 
     /** 框住面板里的进度条。 */
@@ -139,8 +154,7 @@ public final class MachineUiPlacement {
     }
 
     public MachineUiPlacement outlineProgress(int delayTicks) {
-        outlines.add(new Outline(Part.PROGRESS, 0, Math.max(0, delayTicks)));
-        return this;
+        return outline(Part.PROGRESS, 0, delayTicks);
     }
 
     /** 框住编程电路 UI（按钮与展开的设置面板一起框）。 */
@@ -149,8 +163,7 @@ public final class MachineUiPlacement {
     }
 
     public MachineUiPlacement outlineCircuit(int delayTicks) {
-        outlines.add(new Outline(Part.CIRCUIT, 0, Math.max(0, delayTicks)));
-        return this;
+        return outline(Part.CIRCUIT, 0, delayTicks);
     }
 
     /**
@@ -162,8 +175,7 @@ public final class MachineUiPlacement {
     }
 
     public MachineUiPlacement outlinePowerToggle(int delayTicks) {
-        outlines.add(new Outline(Part.POWER, 0, Math.max(0, delayTicks)));
-        return this;
+        return outline(Part.POWER, 0, delayTicks);
     }
 
     /** 框住物品 / 流体自动输出开关（有几个框几个）。 */
@@ -172,8 +184,7 @@ public final class MachineUiPlacement {
     }
 
     public MachineUiPlacement outlineAutoOutput(int delayTicks) {
-        outlines.add(new Outline(Part.AUTO_OUTPUT, 0, Math.max(0, delayTicks)));
-        return this;
+        return outline(Part.AUTO_OUTPUT, 0, delayTicks);
     }
 
     /** 框住 GT 配置器面板里的电路设置按钮；要框本库画的那组电路 UI，用 {@link #outlineCircuit()}。 */
@@ -182,8 +193,7 @@ public final class MachineUiPlacement {
     }
 
     public MachineUiPlacement outlineCircuitButton(int delayTicks) {
-        outlines.add(new Outline(Part.CIRCUIT_BUTTON, 0, Math.max(0, delayTicks)));
-        return this;
+        return outline(Part.CIRCUIT_BUTTON, 0, delayTicks);
     }
 
     /** 框住总线隔离（Distinct）开关。 */
@@ -192,8 +202,19 @@ public final class MachineUiPlacement {
     }
 
     public MachineUiPlacement outlineDistinct(int delayTicks) {
-        outlines.add(new Outline(Part.DISTINCT, 0, Math.max(0, delayTicks)));
-        return this;
+        return outline(Part.DISTINCT, 0, delayTicks);
+    }
+
+    /**
+     * 框住机器页里的第 {@code index} 个按钮或开关，序号按 {@code createUIWidget()} 的添加顺序。
+     * 标题栏、页签、配置器那一列都是 chrome，不算在内。
+     */
+    public MachineUiPlacement outlineButton(int index) {
+        return outlineButton(index, 0);
+    }
+
+    public MachineUiPlacement outlineButton(int index, int delayTicks) {
+        return outline(Part.BUTTON, index, delayTicks);
     }
 
     /** 按给定 tick 数展示面板；此前登记的写入与红框按各自延迟执行。 */
@@ -253,13 +274,21 @@ public final class MachineUiPlacement {
     /** 一次红框请求：框哪一类控件、第几个、延迟多少 tick 亮起。 */
     record Outline(Part part, int index, int delayTicks) {}
 
-    /** 面板里可以被红框框住的控件。后四种是 GT 配置器面板那一列里的按钮，没画那列面板就框不到。 */
-    enum Part {
+    /**
+     * 面板里可以被红框框住的控件。后四种是 GT 配置器面板那一列里的按钮，没画那列面板就框不到。
+     *
+     * <p>
+     * 公开是刻意的：它是红框的唯一扩展点，加一类控件就加一个值，配合 {@link #outline(Part, int, int)}
+     * 使用。带索引的值（SLOT / TANK / BUTTON）身份由收集顺序决定，改机器 UI 的添加顺序会让编号平移。
+     */
+    public enum Part {
         SLOT,
         TANK,
         PROGRESS,
         /** 本库自己画的编程电路 UI（按钮 + 展开面板）。 */
         CIRCUIT,
+        /** 机器页（{@code createUIWidget()} 那块）里的按钮与开关，按添加顺序编号。 */
+        BUTTON,
         /** GT 配置器面板里的工作开关。 */
         POWER,
         /** GT 配置器面板里的物品 / 流体自动输出开关，有几个框几个。 */

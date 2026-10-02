@@ -17,9 +17,11 @@ import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
 
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
+import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
 import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
 import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
 import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.gui.widget.SwitchWidget;
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
 import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.lowdraglib.gui.widget.custom.PlayerInventoryWidget;
@@ -34,7 +36,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 按坐标把机器自己的 {@link ModularUI} 建出来，并整理成 {@link MachineUiPanel}：白名单留下该画的
@@ -94,14 +99,9 @@ final class MachineUiPanelBuilder {
         }
         List<SlotWidget> slots = collectMachineSlots(modularUi);
         List<Widget> tanks = collectMachineTanks(modularUi);
+        List<Widget> buttons = collectMachineButtons(fancy);
         List<ProgressWidget> progress = collectProgressWidgets(modularUi);
-        // 储罐控件画的是自己的 lastFluidInTank 缓存，缓存只在 client-side 模式下每帧从真实储罐刷新
-        // （TankWidget#drawInBackground 里那个 if）；ponder 里没有 ModularUIGuiContainer，
-        // 不打开这个开关，储罐永远画成空的、tooltip 也一直是「空 / 0/0 mB」。
-        tanks.forEach(Widget::setClientSideWidget);
-        // 进度条同理：ProgressWidget#drawInBackground 只在 client-side 模式下每帧问一次 supplier，
-        // 否则画的是初始化那一刻的 lastProgressValue，永远是 0。
-        progress.forEach(Widget::setClientSideWidget);
+
         // 兜底：整棵控件树都标成 client-side。LDLib 的容器在 ponder 里不存在，凡是「只在 client-side
         // 模式下每帧刷新显示缓存」的控件都会画成空的，症状各不相同：储罐显示「空气」（画的是自己的
         // lastFluidInTank 缓存）、进度条永远 0、输入框没有字（TextFieldWidget 的值由 textSupplier 提供，
@@ -117,7 +117,7 @@ final class MachineUiPanelBuilder {
         BetterGregTechPonder.LOGGER.debug("MachineUI at {}: panel {}x{} at ({}, {}), {} machine slot(s), {} tank(s)", machinePos,
                 bounds.width(), bounds.height(), bounds.x(), bounds.y(), slots.size(), tanks.size());
         return new MachineUiPanel(blockEntity, modularUi, bounds.x(), bounds.y(), bounds.width(), bounds.height(),
-                machine, slots, tanks, progress, circuitUi,
+                machine, slots, tanks, progress, buttons, circuitUi,
                 fancy == null ? null : fancy.getConfiguratorPanel(),
                 fancy == null ? null : fancy.getSideTabsWidget());
     }
@@ -277,6 +277,51 @@ final class MachineUiPanelBuilder {
             return fancy;
         }
         return modularUi.mainGroup;
+    }
+
+    /**
+     * 机器页里可见的按钮与开关，按 {@code createUIWidget()} 的添加顺序。
+     *
+     * <p>
+     * 不用 {@code fancy.getCurrentPage()}：上游 GTM 那里返回的是 {@code IFancyUIProvider}，取控件得再
+     * 调 {@code createMainPage(fancy)}，而那是新建一个页面控件、不是屏幕上正在画的那个，框上去会框到
+     * 幽灵控件。这里改为遍历整棵控件树，再按身份把 chrome（标题栏、页签、配置器、玩家背包）整棵排除。
+     *
+     * <p>
+     * LDLib 里 {@code SwitchWidget} 与 {@code ButtonWidget} 是兄弟（都直接继承 {@code Widget}），两类都要认。
+     */
+    private static List<Widget> collectMachineButtons(@Nullable FancyMachineUIWidget fancy) {
+        List<Widget> buttons = new ArrayList<>();
+        if (fancy == null) {
+            return buttons;
+        }
+        Set<Widget> chrome = Collections.newSetFromMap(new IdentityHashMap<>());
+        addIfPresent(chrome, fancy.getTitleBar());
+        addIfPresent(chrome, fancy.getSideTabsWidget());
+        addIfPresent(chrome, fancy.getConfiguratorPanel());
+        addIfPresent(chrome, fancy.getPlayerInventory());
+        collectButtons(fancy, chrome, buttons);
+        return buttons;
+    }
+
+    private static void addIfPresent(Set<Widget> chrome, @Nullable Widget widget) {
+        if (widget != null) {
+            chrome.add(widget);
+        }
+    }
+
+    private static void collectButtons(Widget widget, Set<Widget> chrome, List<Widget> buttons) {
+        if (chrome.contains(widget)) {
+            return;
+        }
+        if ((widget instanceof SwitchWidget || widget instanceof ButtonWidget) && widget.isVisible()) {
+            buttons.add(widget);
+        }
+        if (widget instanceof WidgetGroup group) {
+            for (Widget child : group.getContainedWidgets(true)) {
+                collectButtons(child, chrome, buttons);
+            }
+        }
     }
 
     private static List<Widget> collectMachineTanks(ModularUI modularUi) {

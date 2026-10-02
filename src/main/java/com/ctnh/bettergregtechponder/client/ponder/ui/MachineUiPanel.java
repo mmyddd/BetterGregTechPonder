@@ -28,7 +28,7 @@ import java.util.List;
  */
 record MachineUiPanel(BlockEntity blockEntity, ModularUI modularUi, int originX, int originY, int width, int height,
                       MetaMachine machine, List<SlotWidget> machineSlots, List<Widget> machineTanks,
-                      List<ProgressWidget> progressWidgets, @Nullable Widget circuit,
+                      List<ProgressWidget> progressWidgets, List<Widget> machineButtons, @Nullable Widget circuit,
                       @Nullable ConfiguratorPanel configurators, @Nullable Widget tabs) {
 
     /**
@@ -41,6 +41,7 @@ record MachineUiPanel(BlockEntity blockEntity, ModularUI modularUi, int originX,
             case TANK -> one(tank(outline.index()));
             case PROGRESS -> one(outline.index() >= 0 && outline.index() < progressWidgets.size() ?
                     progressWidgets.get(outline.index()) : null);
+            case BUTTON -> one(button(outline.index()));
             case CIRCUIT -> one(circuit);
             case POWER, AUTO_OUTPUT, CIRCUIT_BUTTON, DISTINCT -> ConfiguratorTabs.buttons(configurators, outline.part());
         };
@@ -54,6 +55,12 @@ record MachineUiPanel(BlockEntity blockEntity, ModularUI modularUi, int originX,
     @Nullable
     SlotWidget slot(int index) {
         return index < 0 || index >= machineSlots.size() ? null : machineSlots.get(index);
+    }
+
+    /** 机器页里第 index 个按钮；越界返回 null。 */
+    @Nullable
+    Widget button(int index) {
+        return index < 0 || index >= machineButtons.size() ? null : machineButtons.get(index);
     }
 
     /** 机器 UI 里第 index 个储罐控件；越界返回 null。 */
