@@ -68,15 +68,24 @@ private static final MachineUI LV_INPUT_BUS_UI = MachineUI.of(GTMachines.ITEM_IM
 
 // inside a PonderStoryBoard
 MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
-        .at(pos)                          // point at this machine: the tail lands on the block centre, and the panel shows it too
+        .at(pos)                          // one-step form: the arrow lands on the block centre and this block's machine is drawn
         .pointing(Pointing.DOWN)          // which side of the pointing target the panel sits on, DOWN by default
         .slot(0).withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
         .tank(0).withFluid(new FluidStack(Fluids.WATER, 1000), 20)   // tanks work the same way
         .show(200);
 ```
 
-`slot(index)` is the index-th item slot in the UI and `tank(index)` the index-th tank; the second argument of `withItem` / `withFluid` is the tick at which the write starts after the panel appears, while the write itself always takes one second. Both GT's and LDLib's `TankWidget` are supported. When the pointing target has to be exact, give the arrow and the machine separately: `at(vec)` sets only the arrow and `machinePos(pos)` says which machine to draw; `at(pos)` is the one-step form that points at a block centre and draws that machine;
-by default only the title bar, the side tabs and the machine page are drawn; `showPlayerInventory()`, `showConfigurators()`, `showCircuit()` and `showNavigationButtons()` switch the remaining parts on;
+`slot(index)` is the index-th item slot in the UI and `tank(index)` the index-th tank; the second argument of `withItem` / `withFluid` is the tick at which the write starts after the panel appears, while the write itself always takes one second. Both GT's and LDLib's `TankWidget` are supported. When the pointing target has to be exact, give the arrow and the machine separately: `at(vec)` sets only the arrow and `machinePos(pos)` says which machine to draw; `at(pos)` is the one-step form that points at a block centre and draws that machine. Forgetting `machinePos(pos)` after `at(vec)` is a compile error, not a runtime warning.
+
+```java
+// the arrow and the machine can also be given separately (panel points above the machine):
+MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI)
+        .at(util.vector().topOf(pos))   // one: the arrow points at the top face
+        .machinePos(pos)                // two: the panel draws the machine in this block
+        .show(120);
+```
+
+By default only the title bar, the side tabs and the machine page are drawn; `showPlayerInventory()`, `showConfigurators()`, `showCircuit()` and `showNavigationButtons()` switch the remaining parts on;
 `showFullUI()` is the shortcut: it draws GT's entire UI at once (title bar, tabs, machine page, configurator panel, tooltip panel, player inventory) in GT's own layout, trimming no component at all.
 Scaling is done with `scale(f)`, or with `fitToPanel(0.42f)` to fit Ponder's panel width. Scaling can also be given at the placement step
 (`showUI(builder, ui, 0.6f)` or the chained `.scale(0.6f)`), which overrides the value set on the UI definition:
@@ -103,6 +112,7 @@ MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI).at(pos)
         .outlineTank(0)          // box tank 0
         .outlineProgress()       // box the progress bar
         .outlineCircuit()        // box the circuit UI (button plus expanded panel)
+        .outlineButton(0)        // box the machine page's first button or switch (add order, chrome excluded)
         .show(160);
 ```
 

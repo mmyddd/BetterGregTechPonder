@@ -67,7 +67,7 @@ private static final MachineUI LV_INPUT_BUS_UI = MachineUI.of(GTMachines.ITEM_IM
 
 // PonderStoryBoard 里
 MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
-        .at(pos)                          // 指向这台机器：尾巴尖落在方块中心，面板也画它
+        .at(pos)                          // 一步到位：箭头落在方块中心，画的就是这一格上的机器
         .pointing(Pointing.DOWN)          // 面板落在指向点的哪一侧，默认 DOWN
         .slot(0).withItem(new ItemStack(Items.GRASS_BLOCK, 64), 20)
         .tank(0).withFluid(new FluidStack(Fluids.WATER, 1000), 20)   // 储罐同理
@@ -75,8 +75,17 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
 ```
 
 `slot(index)` 对应 UI 里第 index 个物品槽，`tank(index)` 对应第 index 个储罐；`withItem` / `withFluid` 的第二个参数是「面板出现后第几个 tick 开始写入」，
-写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。需要精确指向点时把箭头与机器分开给：`at(vec)` 只定箭头，`machinePos(pos)` 指定画哪台机器；`at(pos)` 是一次到位（指向方块中心并画该方块上的机器）。`at(vec)` 之后忘写 `machinePos(pos)` 是编译错误，不是运行期警告；
-默认只画标题栏、左侧页签和机器页，`showPlayerInventory()`、`showConfigurators()`、`showCircuit()`、`showNavigationButtons()` 可以把其余部分打开；
+写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。需要精确指向点时把箭头与机器分开给：`at(vec)` 只定箭头，`machinePos(pos)` 指定画哪台机器；`at(pos)` 是一次到位（指向方块中心并画该方块上的机器）。`at(vec)` 之后忘写 `machinePos(pos)` 是编译错误，不是运行期警告。
+
+```java
+// 箭头与机器也可以分开给（面板要指向机器上方时）：
+MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI)
+        .at(util.vector().topOf(pos))   // 第一段：箭头指向顶面
+        .machinePos(pos)                // 第二段：面板画这一格上的机器
+        .show(120);
+```
+
+默认情况下只画标题栏、左侧页签和机器页，`showPlayerInventory()`、`showConfigurators()`、`showCircuit()`、`showNavigationButtons()` 可以把其余部分打开；
 `showFullUI()` 更省事：一次性把 GT 那一整套都画上（标题栏、页签、机器页、配置器面板、提示面板、玩家背包），位置也照 GT 自己的布局，一个组件都不裁剪。
 缩放用 `scale(f)`，或用 `fitToPanel(0.42f)` 按 Ponder 面板宽度自适应。缩放也可以写在摆放那一步
 （`showUI(builder, ui, 0.6f)` 或链式 `.scale(0.6f)`），会盖过界面定义上的设定：
@@ -103,6 +112,7 @@ MachineUIs.showUI(builder, LV_CHEMICAL_REACTOR_UI).at(pos)
         .outlineTank(0)          // 框住 0 号储罐
         .outlineProgress()       // 框住进度条
         .outlineCircuit()        // 框住编程电路 UI（按钮 + 展开面板）
+        .outlineButton(0)        // 框住机器页里的第 0 个按钮或开关（按添加顺序，chrome 不算）
         .show(160);
 ```
 
