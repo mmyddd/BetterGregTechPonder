@@ -40,6 +40,7 @@ public final class BetterGregTechPonderDatagen {
 
                 add("bettergregtechponder.tooltip.slot_index", "slot %s");
                 add("bettergregtechponder.tooltip.tank_index", "tank %s");
+        add("bettergregtechponder.tooltip.button_index", "button %s");
                 add("bettergregtechponder.ponder.ui.ui_details", "Show UI details");
             }
         });

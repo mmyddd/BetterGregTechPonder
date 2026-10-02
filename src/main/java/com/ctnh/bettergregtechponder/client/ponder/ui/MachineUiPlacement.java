@@ -69,6 +69,12 @@ public final class MachineUiPlacement {
         return this;
     }
 
+    /** 只指定展示哪台机器，指向点保持原样：{@code at(anchor).forMachine(pos)}。 */
+    public MachineUiPlacement forMachine(BlockPos blockPos) {
+        this.machinePos = blockPos;
+        return this;
+    }
+
     /** 指向该方块的中心，面板也展示这个方块上的机器。 */
     public MachineUiPlacement at(BlockPos machinePos) {
         return at(Vec3.atCenterOf(machinePos), machinePos);
@@ -113,8 +119,9 @@ public final class MachineUiPlacement {
     }
 
     /**
-     * 框住某一类控件。这是唯一需要对外扩展的入口：新增一类控件只要在 {@link Part} 里加一个值，
-     * 再在面板里把它收集起来，这里的公共 API 一行都不用动。
+     * 框住某一类控件。具名方法（{@code outlineSlot} / {@code outlineTank} / {@code outlineButton} …）是日常写法，
+     * 它们都落到这里；这里同时也是唯一需要对外扩展的入口：新增一类控件只要在 {@link Part} 里加一个值，
+     * 再在面板里把它收集起来，公共 API 一行都不用动。
      *
      * <p>
      * {@code index} 只对「有顺序」的类别有意义（槽位、储罐、机器页按钮按收集顺序编号）；

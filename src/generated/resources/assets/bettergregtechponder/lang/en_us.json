@@ -9,6 +9,7 @@
   "bettergregtechponder.ponder.chemical_reactor_ui.text_7": "Auto-output sides are machine state as well: items leave through the west side, fluids through the south side.",
   "bettergregtechponder.ponder.chemical_reactor_ui.text_8": "showFullUI() draws GT's whole UI, and each switch in that configurator column can be boxed on its own: power, auto-output, the circuit setting.",
   "bettergregtechponder.ponder.ui.ui_details": "Show UI details",
+  "bettergregtechponder.tooltip.button_index": "button %s",
   "bettergregtechponder.tooltip.slot_index": "slot %s",
   "bettergregtechponder.tooltip.tank_index": "tank %s"
 }
