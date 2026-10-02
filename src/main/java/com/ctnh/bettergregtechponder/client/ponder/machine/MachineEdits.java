@@ -101,4 +101,50 @@ public final class MachineEdits {
     public static void setAutoOutput(SceneBuilder scene, BlockPos machinePos, Direction side, int delayTicks) {
         add(scene, machinePos, new AutoOutputChange(side, true, true), delayTicks);
     }
+
+    /** 设置并行仓的并行数。 */
+    public static void setParallel(SceneBuilder scene, BlockPos hatchPos, int amount) {
+        add(scene, hatchPos, new ParallelChange(amount));
+    }
+
+    public static void setParallel(SceneBuilder scene, BlockPos hatchPos, int amount, int delayTicks) {
+        add(scene, hatchPos, new ParallelChange(amount), delayTicks);
+    }
+
+    /** 清掉维护仓的全部故障（默认同时贴上维护胶带）。 */
+    public static void fixMaintenance(SceneBuilder scene, BlockPos hatchPos) {
+        add(scene, hatchPos, new MaintenanceChange());
+    }
+
+    public static void fixMaintenance(SceneBuilder scene, BlockPos hatchPos, int delayTicks) {
+        add(scene, hatchPos, new MaintenanceChange(), delayTicks);
+    }
+
+    /** 只是把故障位清零、不贴胶带。 */
+    public static void fixMaintenanceWithoutTape(SceneBuilder scene, BlockPos hatchPos, int delayTicks) {
+        add(scene, hatchPos, new MaintenanceChange(false), delayTicks);
+    }
+
+    /**
+     * 机器状态被场景指令改过：画着这些机器的面板下次 tick 重建，控件才能读到新值。
+     *
+     * <p>
+     * 由 {@link MachineEditInstruction} 在改动与回退之后自动请求，场景侧不用管。
+     */
+    public static void requestRebuild() {
+        rebuildGeneration++;
+    }
+
+    /**
+     * 当前的重建代际：每来一次改动请求就 +1。
+     *
+     * <p>
+     * 用代际而不是布尔标志：布尔标志会被第一个 tick 到的面板吃掉，场景里还有别的 UI 元素时，
+     * 真正改动过的那台机器反而等不到重建。各面板记住自己见过的代际，就能各自重建一次。
+     */
+    public static long rebuildGeneration() {
+        return rebuildGeneration;
+    }
+
+    private static long rebuildGeneration;
 }

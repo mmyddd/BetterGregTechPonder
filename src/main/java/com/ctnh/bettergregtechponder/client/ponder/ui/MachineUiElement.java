@@ -54,6 +54,8 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private final List<MachineUiPlacement.Outline> outlines;
 
     private MachineUiPanel panel;
+    /** 见过的最后一代机器改动；与 {@code MachineEdits.rebuildGeneration()} 不同就重建。 */
+    private long seenRebuildGeneration;
     /** 每个红框只报一次「框不到」，免得每帧刷日志。 */
     private boolean[] reportedOutlines;
     private boolean failed;
@@ -114,6 +116,14 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             return;
         }
         ticksShown++;
+        // 场景指令改过机器状态（并行数、维护故障……）时要重建面板：
+        // 那些控件会缓存自己的显示值，只改机器状态是看不出来的。用代际比对，
+        // 保证同一场景里每一块面板都各自重建一次，而不是被最先 tick 到的那个吃掉。
+        long generation = MachineEdits.rebuildGeneration();
+        if (generation != seenRebuildGeneration) {
+            seenRebuildGeneration = generation;
+            invalidate();
+        }
         MachineUiPanel current = resolve(scene);
         if (current == null) {
             return;

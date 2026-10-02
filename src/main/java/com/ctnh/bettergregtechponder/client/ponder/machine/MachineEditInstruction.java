@@ -35,6 +35,8 @@ public class MachineEditInstruction extends TickingInstruction {
             applied = true;
             edit.apply(machine(scene), machinePos);
             MachineEdits.redraw(scene);
+            // 机器状态变了：让画着它的面板下次 tick 重建，控件才能读到新值。
+            MachineEdits.requestRebuild();
         }
     }
 
@@ -44,6 +46,7 @@ public class MachineEditInstruction extends TickingInstruction {
             applied = false;
             edit.revert(machine(scene), machinePos);
             MachineEdits.redraw(scene);
+            MachineEdits.requestRebuild();
         }
         super.reset(scene);
     }

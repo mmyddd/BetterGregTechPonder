@@ -11,6 +11,7 @@ import com.gregtechceu.gtceu.api.gui.fancy.TitleBarWidget;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.fancyconfigurator.CircuitFancyConfigurator;
+import com.gregtechceu.gtceu.api.machine.multiblock.MultiblockControllerMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IHasCircuitSlot;
 import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
 
@@ -26,6 +27,7 @@ import com.lowdragmc.lowdraglib.gui.widget.custom.PlayerInventoryWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -56,6 +58,14 @@ final class MachineUiPanelBuilder {
             return null;
         }
         MetaMachine machine = holder.getMetaMachine();
+        // 思索里的世界不 tick：多方块的成型检测在 onLoad 里只往服务端挂异步逻辑，这里永远不会被调用，
+        // 所以控制器的界面默认一直显示「结构无效」。只有界面定义上显式写了
+        // MachineUI#forceMultiblockActivated() 时，这里才直接把它成型。
+        // 这里刻意不跑 pattern 校验：假场景里那次校验不可靠（例如 GT 的镜像支路只取反一个轴，
+        // 合法的镜像摆法未必能过），也不该由界面层替场景作者判断结构对不对。
+        if (machine instanceof MultiblockControllerMachine controller && !controller.isFormed() && ui.isForceMultiblockActivated()) {
+            form(controller, machinePos);
+        }
         if (!(machine instanceof IUIMachine uiMachine)) {
             return null;
         }
@@ -92,6 +102,14 @@ final class MachineUiPanelBuilder {
         // 进度条同理：ProgressWidget#drawInBackground 只在 client-side 模式下每帧问一次 supplier，
         // 否则画的是初始化那一刻的 lastProgressValue，永远是 0。
         progress.forEach(Widget::setClientSideWidget);
+        // 输入框同理：TextFieldWidget 内部是一个原版 EditBox，值由 textSupplier 提供，但只在
+        // client-side 模式下每帧（updateScreen）同步进去；ponder 里没有容器驱动，不打开这个开关，
+        // 框里永远是空的——机器上的值改了也看不出来。
+        // 兜底：整棵控件树都标成 client-side。LDLib 的容器在 ponder 里不存在，凡是「只在 client-side
+        // 模式下每帧刷新显示缓存」的控件（储罐、进度条、输入框……）都会画成空的：储罐显示「空气」、
+        // 输入框显示空。按位置收集的那几份清单只覆盖机器页范围，按类型收集又会漏掉 GT 自己那些子类，
+        // 所以这里不再猜，直接递归整棵树逐个标记。
+        markClientSide(modularUi.mainGroup);
         // 槽位收集完再挂电路 UI：它的幽灵槽不算进 slot(index) 里，序号跟实机 UI 保持一致。
         Widget circuitUi = circuit ? attachCircuit(machine, root, inventory) : null;
         // 配置器里开关的「按下状态」平时由 LDLib 容器同步刷新，ponder 里没有容器，得自己刷一遍，
@@ -104,6 +122,25 @@ final class MachineUiPanelBuilder {
                 machine, slots, tanks, progress, circuitUi,
                 fancy == null ? null : fancy.getConfiguratorPanel(),
                 fancy == null ? null : fancy.getSideTabsWidget());
+    }
+
+    /** 把控制器在假场景里成型；出错只记日志，不让一段思索因为成型失败而崩。 */
+    private static void form(MultiblockControllerMachine controller, BlockPos machinePos) {
+        try {
+            controller.onStructureFormed();
+        } catch (Throwable t) {
+            BetterGregTechPonder.LOGGER.error("BetterGregTechPonder: forming the multiblock at {} threw", machinePos, t);
+        }
+    }
+
+    /** 递归把整棵控件树标成 client-side：ponder 里没有容器驱动，只有这个开关能让控件每帧刷新显示缓存。 */
+    private static void markClientSide(Widget widget) {
+        widget.setClientSideWidget();
+        if (widget instanceof WidgetGroup group) {
+            for (Widget child : group.getContainedWidgets(true)) {
+                markClientSide(child);
+            }
+        }
     }
 
     /** 机器有没有可用的编程电路槽。 */
