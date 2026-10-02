@@ -48,8 +48,8 @@ public final class MachineUiPlacement {
         this.ui = ui;
     }
 
-    /** 指向点：面板的指针尖（speech box 的小尾巴）对齐这个场景坐标。 */
-    public MachineUiPlacement at(Vec3 anchor) {
+    /** 指向点：面板的指针尖（speech box 的小尾巴）对齐这个场景坐标。经 {@link MachineUiStart#at(Vec3)} 进入。 */
+    MachineUiPlacement anchor(Vec3 anchor) {
         this.anchor = anchor;
         return this;
     }
@@ -80,7 +80,7 @@ public final class MachineUiPlacement {
 
     /** 一步到位：指向该方块的中心，也画这个方块上的机器（等价于 {@code at(中心).machinePos(该方块)}）。 */
     public MachineUiPlacement at(BlockPos machinePos) {
-        return at(Vec3.atCenterOf(machinePos)).machinePos(machinePos);
+        return anchor(Vec3.atCenterOf(machinePos)).machinePos(machinePos);
     }
 
 

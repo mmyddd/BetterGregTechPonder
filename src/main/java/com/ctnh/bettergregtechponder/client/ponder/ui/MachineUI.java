@@ -35,7 +35,7 @@ import net.minecraft.world.level.block.Block;
  *
  * <p>
  * 本对象只描述画什么，不持有机器实例：机器在场景运行时按坐标解析，同一个常量可以跨场景、跨重播复用。
- * 面板是 Ponder 的 speech box，指针尖对准 {@link MachineUiPlacement#at(net.minecraft.world.phys.Vec3)} 传入的坐标，
+ * 面板是 Ponder 的 speech box，指针尖对准 {@link MachineUiStart#at(net.minecraft.world.phys.Vec3)} 传入的坐标，
  * 朝向由 {@link MachineUiPlacement#pointing(net.createmod.catnip.math.Pointing)} 决定。
  */
 public final class MachineUI {
@@ -153,8 +153,8 @@ public final class MachineUI {
     }
 
     /** 开始一次摆放。 */
-    public MachineUiPlacement in(SceneBuilder builder) {
-        return new MachineUiPlacement(builder, this);
+    public MachineUiStart in(SceneBuilder builder) {
+        return new MachineUiStart(new MachineUiPlacement(builder, this));
     }
 
     MachineDefinition definition() {
