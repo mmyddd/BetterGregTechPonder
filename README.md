@@ -17,11 +17,14 @@ Draws **a GregTech CEu Modern machine's own UI** inside Create Ponder scenes, an
 - Covers and switching the machine model between working and idle are separate scene edits (they change machine state) and have nothing to do with the panel; a machine that does not support one reports an error in the log
 - Give it a recipe id and it fills the machine for you: inputs, fluids and outputs all land where they belong and the panel's progress bar runs through once; when the recipe needs a programmed circuit it is written into the circuit slot; a machine that does not match the recipe reports an error in the log
 - Item and fluid auto-output sides can be set from a scene too (auto-output is switched on along the way); a machine that does not support it reports an error in the log
+- Parallel hatches and maintenance hatches are machine state a scene can set as well: `setParallel(hatchPos, n)` and `fixMaintenance(hatchPos)`, or `fixMaintenanceWithoutTape` when the tape should stay off; every edit rebuilds the panel, so the numbers its input boxes show follow along
+- A multiblock controller reads "structure invalid" by default, because a Ponder level never ticks GT's formation check; write `forceMultiblockActivated()` on the UI definition and it is formed outright
 - The programmed-circuit UI is off by default: it appears when the recipe being shown carries `circuitMeta(n)`, or it can be pinned on with `showCircuit()`; the expanded panel takes the inventory row and its button sits vertically centered on the panel's left
-- Slots, tanks, the progress bar and the circuit UI can each be boxed in red to draw the eye
+- Slots, tanks, the progress bar, the circuit UI and the machine page's buttons and switches can each be boxed in red to draw the eye
+- Widgets are boxed with the named shortcuts — `outlineSlot(i)`, `outlineTank(i)`, `outlineProgress()`, `outlineCircuit()`, `outlineButton(i)` and the configurator buttons listed above — each taking an optional delay in ticks; they all funnel into the generic `outline(Part, index, delayTicks)`, which doubles as the extension point: `Part` is public, so a new kind costs one enum value plus collecting it, with no change to the API
 - `showFullUI()` draws GT's whole UI exactly as it is in game (configurator panel, tooltip panel, player inventory) with nothing trimmed
 - The working toggle, auto-output, circuit settings and distinct (bus isolation) buttons in that UI can be boxed one by one; a machine that lacks one reports an error line
-- With Ponder's editing mode on (`editingMode` in `ponder-client.toml`), hovering a slot shows that slot's real index in the machine as the first tooltip line
+- With Ponder's editing mode on (`editingMode` in `ponder-client.toml`), hovering a slot, a tank or a button shows its real index in the machine as the first tooltip line, and a button's own tooltip shows up as well
 
 ## Showcase
 
