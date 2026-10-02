@@ -54,6 +54,8 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private final List<MachineUiPlacement.Outline> outlines;
 
     private MachineUiPanel panel;
+    /** 面板建不出来时只报一次，别每帧刷屏。 */
+    private boolean reportedMissingPanel;
     /** 见过的最后一代机器改动；与 {@code MachineEdits.rebuildGeneration()} 不同就重建。 */
     private long seenRebuildGeneration;
     /** 每个红框只报一次「框不到」，免得每帧刷日志。 */
@@ -108,6 +110,7 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
             recipe.revert(panel);
         }
         ticksShown = 0;
+        reportedMissingPanel = false;
     }
 
     @Override
@@ -214,6 +217,14 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
     private MachineUiPanel resolve(PonderScene scene) {
         BlockEntity blockEntity = scene.getWorld().getBlockEntity(machinePos);
         if (blockEntity == null) {
+            // 静默返回的话，场景里只会「什么都没有」，看不出原因：多半是这一格没有被 storyboard 载入，
+            // 只是世界里有方块而没生成方块实体（例如代码 setBlock 出来的），或者指向点写到了机器上方那一格。
+            if (!reportedMissingPanel) {
+                reportedMissingPanel = true;
+                BetterGregTechPonder.LOGGER.warn(
+                        "BetterGregTechPonder: no block entity at {} - the UI panel cannot be built for this segment",
+                        machinePos);
+            }
             return null;
         }
         if (panel != null && panel.blockEntity() == blockEntity) {
@@ -222,6 +233,14 @@ public class MachineUiElement extends AnimatedOverlayElementBase {
         try {
             MachineUiPanel built = MachineUiPanelBuilder.build(ui, machinePos, blockEntity, recipeCircuit);
             if (built == null) {
+                // 同样别静默：面板建不出来有四种原因（不是机器方块 / 机器没有 UI / 玩家不在 / createUI 返回 null），
+                // 报出坐标和方块 id 才能在日志里区分；每段只报一次。
+                if (!reportedMissingPanel) {
+                    reportedMissingPanel = true;
+                    BetterGregTechPonder.LOGGER.warn(
+                            "BetterGregTechPonder: the block at {} ({}) produced no panel - not a machine, no UI, no player, or createUI returned null",
+                            machinePos, blockEntity.getBlockState().getBlock());
+                }
                 return null;
             }
             writes.resetMarks();
