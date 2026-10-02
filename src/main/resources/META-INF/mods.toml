@@ -5,7 +5,7 @@ issueTrackerURL = "https://github.com/mmyddd/BetterGregTechPonder/issues"
 
 [[mods]]
 modId = "bettergregtechponder"
-version = "1.0.0"
+version = "1.0.1"
 displayName = "BetterGregTechPonder"
 authors = "mmyddd"
 description = '''
