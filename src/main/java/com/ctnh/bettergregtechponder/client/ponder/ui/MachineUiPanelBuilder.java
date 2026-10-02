@@ -102,13 +102,11 @@ final class MachineUiPanelBuilder {
         // 进度条同理：ProgressWidget#drawInBackground 只在 client-side 模式下每帧问一次 supplier，
         // 否则画的是初始化那一刻的 lastProgressValue，永远是 0。
         progress.forEach(Widget::setClientSideWidget);
-        // 输入框同理：TextFieldWidget 内部是一个原版 EditBox，值由 textSupplier 提供，但只在
-        // client-side 模式下每帧（updateScreen）同步进去；ponder 里没有容器驱动，不打开这个开关，
-        // 框里永远是空的——机器上的值改了也看不出来。
         // 兜底：整棵控件树都标成 client-side。LDLib 的容器在 ponder 里不存在，凡是「只在 client-side
-        // 模式下每帧刷新显示缓存」的控件（储罐、进度条、输入框……）都会画成空的：储罐显示「空气」、
-        // 输入框显示空。按位置收集的那几份清单只覆盖机器页范围，按类型收集又会漏掉 GT 自己那些子类，
-        // 所以这里不再猜，直接递归整棵树逐个标记。
+        // 模式下每帧刷新显示缓存」的控件都会画成空的，症状各不相同：储罐显示「空气」（画的是自己的
+        // lastFluidInTank 缓存）、进度条永远 0、输入框没有字（TextFieldWidget 的值由 textSupplier 提供，
+        // 只有 client-side 模式下 updateScreen() 才会每帧同步进去）。按位置收集的那几份清单只覆盖
+        // 机器页范围，按类型收集又会漏掉 GT 自己那些子类，所以这里不再猜，直接递归整棵树逐个标记。
         markClientSide(modularUi.mainGroup);
         // 槽位收集完再挂电路 UI：它的幽灵槽不算进 slot(index) 里，序号跟实机 UI 保持一致。
         Widget circuitUi = circuit ? attachCircuit(machine, root, inventory) : null;
