@@ -9,6 +9,7 @@
   "bettergregtechponder.ponder.chemical_reactor_ui.text_7": "自动输出口也是机器状态：物品走西面、流体走南面。",
   "bettergregtechponder.ponder.chemical_reactor_ui.text_8": "showFullUI() 会把原版 GT 的整套界面画出来，那一列配置器里的开关也能逐个套红框：工作开关、自动输出、电路设置。",
   "bettergregtechponder.ponder.ui.ui_details": "查看 UI 详情",
+  "bettergregtechponder.tooltip.button_index": "按钮 %s",
   "bettergregtechponder.tooltip.slot_index": "槽位 %s",
   "bettergregtechponder.tooltip.tank_index": "储罐 %s"
 }

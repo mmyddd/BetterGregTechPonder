@@ -7,7 +7,9 @@ import com.ctnh.bettergregtechponder.BetterGregTechPonder;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyUIProvider;
 import com.gregtechceu.gtceu.api.gui.fancy.TabsWidget;
 
+import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
 import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.gui.widget.SwitchWidget;
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
 
 import net.createmod.catnip.math.Pointing;
@@ -54,6 +56,8 @@ final class MachineUiOverlay {
     private static final String SLOT_INDEX_KEY = "bettergregtechponder.tooltip.slot_index";
     /** 同上，储罐的序号。 */
     private static final String TANK_INDEX_KEY = "bettergregtechponder.tooltip.tank_index";
+    /** 同上，机器页按钮/开关的序号。 */
+    private static final String BUTTON_INDEX_KEY = "bettergregtechponder.tooltip.button_index";
 
     private MachineUiOverlay() {}
 
@@ -177,7 +181,7 @@ final class MachineUiOverlay {
             Widget hovered = panel.modularUi().mainGroup.getHoverElement(uiMouseX, uiMouseY);
             List<Component> lines = new ArrayList<>(tooltipFor(hovered, uiMouseX, uiMouseY));
             // 空槽位的 getFullTooltipTexts() 是空列表，序号得在判空之前加。
-            appendSlotIndex(panel, hovered, lines);
+            appendIndexLine(panel, hovered, lines);
             if (lines.isEmpty()) {
                 return;
             }
@@ -190,10 +194,15 @@ final class MachineUiOverlay {
     }
 
     /**
-     * Ponder 的编辑模式（{@code PonderConfig.Client().editingMode}）打开时，把悬停槽位在机器里的真实序号
-     * 加在 tooltip 第一行——写场景时对着它填 {@code slot(index)}。玩家背包的槽位不算在内。
+     * Ponder 的编辑模式（{@code PonderConfig.Client().editingMode}）打开时，把悬停控件在机器里的真实序号
+     * 加在 tooltip 第一行——写场景时对着它填 {@code slot(index)} / {@code tank(index)} /
+     * {@code outlineButton(index)}。玩家背包的槽位不算在内，也不出现这行。
+     *
+     * <p>
+     * 槽位、储罐、按钮都靠「控件对象在这份收集清单里的位置」反查序号，和 {@code MachineUiPanel} 里
+     * {@code slot}/{@code tank}/{@code button} 用的是同一份清单，所以这里读到的数字就是场景里该填的数字。
      */
-    private static void appendSlotIndex(MachineUiPanel panel, Widget hovered, List<Component> lines) {
+    private static void appendIndexLine(MachineUiPanel panel, Widget hovered, List<Component> lines) {
         if (!PonderIndex.editingModeActive()) {
             return;
         }
@@ -209,6 +218,13 @@ final class MachineUiOverlay {
             if (index >= 0) {
                 lines.add(0, Component.translatable(TANK_INDEX_KEY, index).withStyle(ChatFormatting.GRAY));
             }
+            return;
+        }
+        if (hovered instanceof SwitchWidget || hovered instanceof ButtonWidget) {
+            int index = panel.machineButtons().indexOf(hovered);
+            if (index >= 0) {
+                lines.add(0, Component.translatable(BUTTON_INDEX_KEY, index).withStyle(ChatFormatting.GRAY));
+            }
         }
     }
 
@@ -222,6 +238,10 @@ final class MachineUiOverlay {
         if (hovered instanceof SlotWidget slot) {
             // 含 LargeStackSlotWidget 的「64 / 256」数量行。
             return slot.getFullTooltipTexts();
+        }
+        if (hovered instanceof SwitchWidget || hovered instanceof ButtonWidget) {
+            // 按钮的悬停提示只存在控件里，dev 下的 drawTooltipTexts 走的是不存在的容器，这里自己取出来。
+            return hovered.getTooltipTexts();
         }
         if (hovered instanceof TabsWidget tabs) {
             IFancyUIProvider tab = tabs.getHoveredTab(mouseX, mouseY);

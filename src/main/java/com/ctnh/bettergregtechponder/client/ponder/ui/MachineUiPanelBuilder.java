@@ -131,13 +131,17 @@ final class MachineUiPanelBuilder {
         }
     }
 
-    /** 递归把整棵控件树标成 client-side：ponder 里没有容器驱动，只有这个开关能让控件每帧刷新显示缓存。 */
-    private static void markClientSide(Widget widget) {
-        widget.setClientSideWidget();
-        if (widget instanceof WidgetGroup group) {
-            for (Widget child : group.getContainedWidgets(true)) {
-                markClientSide(child);
-            }
+    /**
+     * 把整棵控件树标成 client-side：ponder 里没有容器驱动，只有这个开关能让控件每帧刷新显示缓存。
+     *
+     * <p>
+     * {@code getContainedWidgets} 自己就是递归的（返回含全部后代的扁平列表），所以这里只调一次、
+     * 不要再对返回的每个控件递归——那样同一份后代会被重复访问很多遍。
+     */
+    private static void markClientSide(WidgetGroup root) {
+        root.setClientSideWidget();
+        for (Widget widget : root.getContainedWidgets(true)) {
+            widget.setClientSideWidget();
         }
     }
 
@@ -295,32 +299,32 @@ final class MachineUiPanelBuilder {
         if (fancy == null) {
             return buttons;
         }
+        // chrome 一次性展开成身份集合：getContainedWidgets 返回的已经是含全部后代的扁平列表，
+        // 拿到它之后再逐个递归会把同一份后代数很多遍，所以下面只走一遍、按身份跳过 chrome。
         Set<Widget> chrome = Collections.newSetFromMap(new IdentityHashMap<>());
-        addIfPresent(chrome, fancy.getTitleBar());
-        addIfPresent(chrome, fancy.getSideTabsWidget());
-        addIfPresent(chrome, fancy.getConfiguratorPanel());
-        addIfPresent(chrome, fancy.getPlayerInventory());
-        collectButtons(fancy, chrome, buttons);
+        addChrome(chrome, fancy.getTitleBar());
+        addChrome(chrome, fancy.getSideTabsWidget());
+        addChrome(chrome, fancy.getConfiguratorPanel());
+        addChrome(chrome, fancy.getPlayerInventory());
+        for (Widget widget : fancy.getContainedWidgets(true)) {
+            if (chrome.contains(widget)) {
+                continue;
+            }
+            if ((widget instanceof SwitchWidget || widget instanceof ButtonWidget) && widget.isVisible()) {
+                buttons.add(widget);
+            }
+        }
         return buttons;
     }
 
-    private static void addIfPresent(Set<Widget> chrome, @Nullable Widget widget) {
-        if (widget != null) {
-            chrome.add(widget);
-        }
-    }
-
-    private static void collectButtons(Widget widget, Set<Widget> chrome, List<Widget> buttons) {
-        if (chrome.contains(widget)) {
+    /** 把一个 chrome 控件连同它的整棵子树记进排除集合；传 null 表示这类面板没画。 */
+    private static void addChrome(Set<Widget> chrome, @Nullable Widget widget) {
+        if (widget == null) {
             return;
         }
-        if ((widget instanceof SwitchWidget || widget instanceof ButtonWidget) && widget.isVisible()) {
-            buttons.add(widget);
-        }
+        chrome.add(widget);
         if (widget instanceof WidgetGroup group) {
-            for (Widget child : group.getContainedWidgets(true)) {
-                collectButtons(child, chrome, buttons);
-            }
+            chrome.addAll(group.getContainedWidgets(true));
         }
     }
 
