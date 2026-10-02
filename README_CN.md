@@ -75,7 +75,7 @@ MachineUIs.showUI(builder, LV_INPUT_BUS_UI)
 ```
 
 `slot(index)` 对应 UI 里第 index 个物品槽，`tank(index)` 对应第 index 个储罐；`withItem` / `withFluid` 的第二个参数是「面板出现后第几个 tick 开始写入」，
-写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。需要精确指向点时把箭头与机器分开给：`at(vec)` 只定箭头，`machinePos(pos)` 指定画哪台机器；`at(pos)` 是一次到位（指向方块中心并画该方块上的机器）；
+写入本身固定 1 秒。GT 与 LDLib 两份 `TankWidget` 都认。需要精确指向点时把箭头与机器分开给：`at(vec)` 只定箭头，`machinePos(pos)` 指定画哪台机器；`at(pos)` 是一次到位（指向方块中心并画该方块上的机器）。`at(vec)` 之后忘写 `machinePos(pos)` 是编译错误，不是运行期警告；
 默认只画标题栏、左侧页签和机器页，`showPlayerInventory()`、`showConfigurators()`、`showCircuit()`、`showNavigationButtons()` 可以把其余部分打开；
 `showFullUI()` 更省事：一次性把 GT 那一整套都画上（标题栏、页签、机器页、配置器面板、提示面板、玩家背包），位置也照 GT 自己的布局，一个组件都不裁剪。
 缩放用 `scale(f)`，或用 `fitToPanel(0.42f)` 按 Ponder 面板宽度自适应。缩放也可以写在摆放那一步
@@ -256,7 +256,9 @@ src/main/java/com/ctnh/bettergregtechponder/
 │       ├── scenes/ChemicalReactorUi.java  示例场景
 │       └── ui/
 │           ├── MachineUI.java            界面描述对象（缩放、画哪些 fancy 组件）
-│           ├── MachineUiPlacement.java   摆放：at / pointing / slot / tank / recipe / show
+│           ├── MachineUiStart.java       摆放第一段：只有 at(BlockPos) / at(Vec3)
+│           ├── MachineUiAnchor.java      摆放第二段：只有 machinePos(BlockPos)
+│           ├── MachineUiPlacement.java   摆放：pointing / slot / tank / outline* / recipe / show
 │           ├── MachineUiElement.java     叠加层元素：按坐标解析、跑时间线
 │           ├── MachineUiPanelBuilder.java 建面板：白名单、边界、收集槽位/储罐/进度条
 │           ├── MachineUiPanel.java       面板快照 + 槽位/储罐读写

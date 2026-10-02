@@ -255,7 +255,9 @@ src/main/java/com/ctnh/bettergregtechponder/
 │       ├── scenes/ChemicalReactorUi.java  example scene
 │       └── ui/
 │           ├── MachineUI.java            UI description object (scale, which fancy components to draw)
-│           ├── MachineUiPlacement.java   placement: at / pointing / slot / tank / recipe / show
+│           ├── MachineUiStart.java       placement stage 1: only at(BlockPos) / at(Vec3)
+│           ├── MachineUiAnchor.java      placement stage 2: only machinePos(BlockPos)
+│           ├── MachineUiPlacement.java   placement: pointing / slot / tank / outline* / recipe / show
 │           ├── MachineUiElement.java     overlay element: resolves by coordinate, runs the timeline
 │           ├── MachineUiPanelBuilder.java builds the panel: whitelist, bounds, collects slots/tanks/progress bar
 │           ├── MachineUiPanel.java       panel snapshot plus slot and tank access
