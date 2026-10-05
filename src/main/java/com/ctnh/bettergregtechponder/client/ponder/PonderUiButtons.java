@@ -67,8 +67,6 @@ public final class PonderUiButtons {
     private static DetailsButton button;
     /** 是否已经贴到"显示方块名称"右边。 */
     private static boolean placed;
-    /** 这一帧是否已经处理过（mixin 与事件两条路都会调，只认第一次）。 */
-    private static boolean frameHandled;
     /** 连续多少帧没看到面板；连着几帧都没有才关模式。 */
     private static int absentFrames;
     private static boolean logged;
@@ -146,10 +144,10 @@ public final class PonderUiButtons {
      * 于是模式刚点开就被关掉（场景照旧推进）、按钮也一直灰着点不动。
      */
     public static void beforeRender(PonderUI ponder) {
-        if (frameHandled) {
+        // 一帧只处理一次这件事本身在 FrameGuard 里，那部分有单元测试。
+        if (!FrameGuard.handled()) {
             return;
         }
-        frameHandled = true;
         boolean anyPanel = MachineUiInteraction.hasPanel();
         boolean fullPanel = MachineUiInteraction.hasFullPanel();
         MachineUiInteraction.beginFrame();
@@ -186,7 +184,7 @@ public final class PonderUiButtons {
      * 所以排布必须在这里做。还没排成（比如刚进场景那一帧 fade 还没起来）就留着下一帧重试。
      */
     public static void afterRender(PonderUI ponder, GuiGraphics graphics, int mouseX, int mouseY) {
-        frameHandled = false;
+        FrameGuard.endFrame();
         // 每帧都重新贴一次：锚点（显示方块名称）在场景切换那几帧可能还没稳定，
         // 只贴一次会把按钮留在初始的居中位置（正好压住「思索结束」）。
         if (button != null && MachineUiInteraction.hasFullPanel()) {
@@ -310,26 +308,16 @@ public final class PonderUiButtons {
         row.sort(Comparator.comparingInt(PonderButton::getX));
         // 锚点必须在左半边：最左边的那些贴边按钮（退出之类）与中间的显示方块名称二选一，
         // 绝不会落到右边的思索结束、重放上 —— 落到那里就会在它们身上叠一个按钮。
-        int edge = Math.max(1, Math.round(ponder.width * EDGE_FRACTION));
-        int half = ponder.width / 2;
-        PonderButton anchor = null;
+        // 判定只看坐标，具体规则与它的边界情况在 ButtonRow 里，那部分有单元测试。
+        List<Integer> xs = new ArrayList<>();
         for (PonderButton other : row) {
-            if (other.getX() >= edge && other.getX() < half) {
-                anchor = other;
-                break;
-            }
+            xs.add(other.getX());
         }
-        if (anchor == null) {
-            for (PonderButton other : row) {
-                if (other.getX() < half) {
-                    anchor = other;
-                    break;
-                }
-            }
-        }
-        if (anchor == null) {
+        int anchorIndex = ButtonRow.anchor(xs, ponder.width, EDGE_FRACTION);
+        if (anchorIndex < 0) {
             return false;
         }
+        PonderButton anchor = row.get(anchorIndex);
         button.setX(anchor.getX() + anchor.getWidth() + GAP);
         button.setY(anchor.getY());
         return true;

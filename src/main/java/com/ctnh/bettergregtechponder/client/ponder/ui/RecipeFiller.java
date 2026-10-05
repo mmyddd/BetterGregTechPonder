@@ -40,8 +40,8 @@ import java.util.List;
  * <p>哪些槽位、储罐是输入，哪些是输出，看 GT 自己打的 {@link IngredientIO} 标签（GT 给 EMI 传配方
  * 用的也是这一套），所以不用猜槽位顺序。
  *
- * <p>机器与配方对不上——不是配方机器、配方 id 不存在、配方类型不属于这台机器、面板里没有对应的槽位——
- * 就在日志里报一行 error，这一段跳过，面板照常画，机器也不动。
+ * <p>机器与配方对不上——配方 id 不存在、配方类型不属于这台机器、面板里没有对应的槽位——就在日志里报一行
+ * error，这一段跳过，面板照常画，机器也不动。取配方的那条链条只有 {@link #byId} 一处，两个调用点共用。
  */
 final class RecipeFiller {
 
@@ -67,16 +67,8 @@ final class RecipeFiller {
      * 这里只看配方本身，机器对不对得上交给 {@link #plan} 那一步报错。
      */
     static boolean needsCircuit(@Nullable MachineUiPlacement.RecipeFill fill) {
-        if (fill == null) {
-            return false;
-        }
-        ResourceLocation key = ResourceLocation.tryParse(fill.recipeId());
-        // datagen 里场景脚本也会跑一遍（Ponder 收文案），那时候还没有客户端，Minecraft.getInstance() 是 null。
-        Minecraft minecraft = Minecraft.getInstance();
-        ClientLevel level = minecraft == null ? null : minecraft.level;
-        RecipeManager manager = key == null || level == null ? null : level.getRecipeManager();
-        Recipe<?> found = manager == null ? null : manager.byKey(key).orElse(null);
-        if (!(found instanceof GTRecipe recipe)) {
+        GTRecipe recipe = byId(fill);
+        if (recipe == null) {
             return false;
         }
         for (ItemStack stack : RecipeHelper.getInputItems(recipe)) {
@@ -243,23 +235,37 @@ final class RecipeFiller {
         return progressValue;
     }
 
-    /** 按 id 找配方，并确认它就是这台机器的配方。 */
-    private @Nullable GTRecipe find(IRecipeLogicMachine machine) {
+    /**
+     * 按 id 找配方。这是全类唯一一处「取配方」的链条，{@link #needsCircuit} 与 {@link #find} 都走它 ——
+     * 免得同一套判空在两处各写一遍。
+     *
+     * <p>链条上每一环都可能拿不到东西，四种情况都返回 null 交给调用方决定要不要说话：配方 id 不是合法的
+     * resource location；datagen 里场景脚本也会跑一遍（Ponder 收文案）而那时候还没有客户端，
+     * {@code Minecraft.getInstance()} 是 null；世界还没加载，拿不到 {@code level}；以及这个 id 根本没有配方。
+     */
+    private static @Nullable GTRecipe byId(@Nullable MachineUiPlacement.RecipeFill fill) {
+        if (fill == null) {
+            return null;
+        }
         ResourceLocation key = ResourceLocation.tryParse(fill.recipeId());
         if (key == null) {
-            error("it is not a valid resource location");
             return null;
         }
         Minecraft minecraft = Minecraft.getInstance();
         ClientLevel level = minecraft == null ? null : minecraft.level;
         RecipeManager manager = level == null ? null : level.getRecipeManager();
         if (manager == null) {
-            error("no recipe manager, is a world loaded?");
             return null;
         }
         Recipe<?> recipe = manager.byKey(key).orElse(null);
-        if (!(recipe instanceof GTRecipe gtRecipe)) {
-            error("there is no GT recipe with this id");
+        return recipe instanceof GTRecipe gtRecipe ? gtRecipe : null;
+    }
+
+    /** 按 id 找配方，并确认它就是这台机器的配方。 */
+    private @Nullable GTRecipe find(IRecipeLogicMachine machine) {
+        GTRecipe gtRecipe = byId(fill);
+        if (gtRecipe == null) {
+            error("there is no GT recipe with this id, or the world is not loaded yet");
             return null;
         }
         for (GTRecipeType type : machine.getRecipeTypes()) {

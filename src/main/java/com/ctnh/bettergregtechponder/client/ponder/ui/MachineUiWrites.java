@@ -145,8 +145,8 @@ final class MachineUiWrites {
                 continue;
             }
             if (fluidOriginals[i] == null) {
-                FluidStack current = MachineUiPanel.fluidOf(tank);
-                fluidOriginals[i] = current == null ? FluidStack.EMPTY : current.copy();
+                // 空值的归一规则在 StackWrite 里，那部分有单元测试。
+                fluidOriginals[i] = StackWrite.normalized(MachineUiPanel.fluidOf(tank)).copy();
             }
             int target = write.stack().getAmount();
             if (elapsed >= FILL_TICKS) {
