@@ -27,6 +27,21 @@ java {
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    testLogging {
+        events 'failed'
+        exceptionFormat 'full'
+    }
+}
+
+sourceSets {
+    test {
+        compileClasspath += sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.runtimeClasspath
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
@@ -99,6 +114,9 @@ legacyForge {
 
 dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     modCompileOnly "curse.maven:gregtechceu-modern-890405:${gtceu_file_id}"
     modCompileOnly "com.lowdragmc.ldlib:ldlib-forge-1.20.1:${ldlib_version}"
