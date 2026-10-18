@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(PonderUI.class)
 public abstract class PonderUIMixin {
 
-    @Inject(method = "init", at = @At("RETURN"), remap = false)
+    @Inject(method = "init", at = @At("RETURN"))
     private void bettergregtechponder$addUiDetailsButton(CallbackInfo ci) {
         PonderUiButtons.attach((PonderUI) (Object) this);
     }
@@ -42,14 +42,14 @@ public abstract class PonderUIMixin {
         PonderUiButtons.afterRender((PonderUI) (Object) this, graphics, mouseX, mouseY);
     }
 
-    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void bettergregtechponder$clickPanel(double x, double y, int button, CallbackInfoReturnable<Boolean> cir) {
         if (PonderUiButtons.clickPanel(x, y, button)) {
             cir.setReturnValue(true);
         }
     }
 
-    @Inject(method = "tick", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     private void bettergregtechponder$freezeScene(CallbackInfo ci) {
         // 打开「查看 UI 详情」时把整个思索冻住：场景不再推进，跟"查看方块名称"一个效果，
         // 这样观众点页签、展开电路面板时进度条不会继续跑。
@@ -59,7 +59,7 @@ public abstract class PonderUIMixin {
         }
     }
 
-    @Inject(method = "tick", at = @At("RETURN"), remap = false)
+    @Inject(method = "tick", at = @At("RETURN"))
     private void bettergregtechponder$tickButton(CallbackInfo ci) {
         PonderUiButtons.tick();
     }
