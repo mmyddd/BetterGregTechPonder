@@ -2,13 +2,15 @@
 
 # BetterGregTechPonder
 
-**Draws a GregTech CEu Modern machine's own UI inside Create Ponder scenes, and reads and writes its items and fluids by real slot index.**
+**Draws a GregTech CEu Modern machine's own UI inside Ponder scenes, and reads and writes its items and fluids by real slot index.**
 
 English | [简体中文](README_CN.md)
 
 </div>
 
-Draws **a GregTech CEu Modern machine's own UI** inside Create Ponder scenes, and puts items into it and fluids into its tanks by the machine's real slot indices.
+Draws **a GregTech CEu Modern machine's own UI** inside Ponder scenes, and puts items into it and fluids into its tanks by the machine's real slot indices.
+
+Create is not required: Ponder is a standalone mod and this jar embeds it, together with the Flywheel it needs (both jar-in-jar), so dropping this jar in `mods/` is enough.
 
 - Built against official GTCEu (`curse.maven:gregtechceu-modern-890405:7917773`); no fork or patch is required
 - Client-side library only: nothing drawing-related is ever loaded on the server
@@ -57,7 +59,8 @@ is a scene edit independent of the UI, reverted once the segment ends (see the [
 |------|------|
 | Minecraft / Forge | 1.20.1 / 47.4.1 |
 | GregTech CEu Modern | official CurseForge build (file id in `gradle.properties`) |
-| Create + Ponder | 6.0.8-291 / Ponder-Forge 1.20.1 |
+| Ponder | Ponder-Forge 1.20.1 (1.0.78), embedded jar-in-jar — nothing to install separately |
+| Flywheel | 1.0.6-beta-266, embedded jar-in-jar (Ponder requires it) |
 | LDLib | 1.0.52 |
 
 ## Usage
@@ -198,8 +201,7 @@ sets the circuit to the tier the recipe wants, runs the progress bar through and
 private static final MachineUI LV_UI = MachineUI.of(GTMachines.CHEMICAL_REACTOR[GTValues.LV]).scale(0.6f);
 private static final MachineUI FULL_UI = MachineUI.of(GTMachines.CHEMICAL_REACTOR[GTValues.LV]).showFullUI().scale(0.6f);
 
-public static void Common(SceneBuilder builder, SceneBuildingUtil util) {
-    CreateSceneBuilder scene = new CreateSceneBuilder(builder);
+public static void Common(SceneBuilder scene, SceneBuildingUtil util) {
     BlockPos machinePos = util.grid().at(1, 1, 1);
 
     // 1. the UI alone

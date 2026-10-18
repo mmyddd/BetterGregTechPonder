@@ -5,11 +5,11 @@ issueTrackerURL = "https://github.com/mmyddd/BetterGregTechPonder/issues"
 
 [[mods]]
 modId = "bettergregtechponder"
-version = "1.0.2"
+version = "1.0.3"
 displayName = "BetterGregTechPonder"
 authors = "mmyddd"
 description = '''
-A client-side library that draws a real GregTech machine UI inside Create Ponder scenes.
+A client-side library that draws a real GregTech machine UI inside Ponder scenes.
 '''
 
 [[dependencies.bettergregtechponder]]
@@ -34,8 +34,8 @@ A client-side library that draws a real GregTech machine UI inside Create Ponder
     side = "BOTH"
 
 [[dependencies.bettergregtechponder]]
-    modId = "create"
+    modId = "ponder"
     mandatory = true
-    versionRange = "*"
+    versionRange = "[1.0.0,)"
     ordering = "NONE"
-    side = "BOTH"
+    side = "CLIENT"

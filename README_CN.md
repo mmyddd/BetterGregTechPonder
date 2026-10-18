@@ -2,13 +2,15 @@
 
 # BetterGregTechPonder
 
-**在 Create 的思索（Ponder）场景里画出 GregTech CEu Modern 机器自己的界面，并按真实槽位序号读写物品与流体。**
+**在思索（Ponder）场景里画出 GregTech CEu Modern 机器自己的界面，并按真实槽位序号读写物品与流体。**
 
 [English](README.md) | 简体中文
 
 </div>
 
-在 Create 的思索（Ponder）场景里画出 **GregTech CEu Modern 机器自己的界面**，并按它真实的槽位序号往里放物品、灌流体。
+在思索（Ponder）场景里画出 **GregTech CEu Modern 机器自己的界面**，并按它真实的槽位序号往里放物品、灌流体。
+
+不需要 Create：Ponder 是独立 mod，本 jar 已用 jar-in-jar 把它和它需要的 Flywheel 一起内嵌进去，丢进 `mods/` 即可。
 
 - 针对官方 GTCEu 编译（`curse.maven:gregtechceu-modern-890405:7917773`），不依赖任何分支改动
 - 纯客户端库：绘制相关的类不会被服务端加载
@@ -56,7 +58,8 @@
 |------|------|
 | Minecraft / Forge | 1.20.1 / 47.4.1 |
 | GregTech CEu Modern | 官方 CurseForge 版本（file id 见 gradle.properties） |
-| Create + Ponder | 6.0.8-291 / Ponder-Forge 1.20.1 |
+| Ponder | Ponder-Forge 1.20.1（1.0.78），已 jar-in-jar 内嵌，无需单独安装 |
+| Flywheel | 1.0.6-beta-266，已 jar-in-jar 内嵌（Ponder 需要） |
 | LDLib | 1.0.52 |
 
 ## 用法
@@ -199,8 +202,7 @@ MachineEdits.setWorkingModel(builder, pos, false, 20);   // 回到待机
 private static final MachineUI LV_UI = MachineUI.of(GTMachines.CHEMICAL_REACTOR[GTValues.LV]).scale(0.6f);
 private static final MachineUI FULL_UI = MachineUI.of(GTMachines.CHEMICAL_REACTOR[GTValues.LV]).showFullUI().scale(0.6f);
 
-public static void Common(SceneBuilder builder, SceneBuildingUtil util) {
-    CreateSceneBuilder scene = new CreateSceneBuilder(builder);
+public static void Common(SceneBuilder scene, SceneBuildingUtil util) {
     BlockPos machinePos = util.grid().at(1, 1, 1);
 
     // 1. 只画界面

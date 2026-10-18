@@ -54,6 +54,19 @@ jar {
     }
 }
 
+// 内嵌的 Ponder 生产 jar 是 SRG 命名，metadata 必须标 isObfuscated=true，开发环境才会去重映射它。
+tasks.named('jarJar').configure {
+    doLast {
+        def metadataFile = outputDirectory.file('META-INF/jarjar/metadata.json').get().asFile
+        def originalMetadata = metadataFile.getText('UTF-8')
+        def updatedMetadata = originalMetadata.replaceAll(/"isObfuscated"\s*:\s*false/, '"isObfuscated": true')
+        if (updatedMetadata == originalMetadata) {
+            throw new GradleException('Ponder JarJar metadata did not contain an obfuscation flag')
+        }
+        metadataFile.setText(updatedMetadata, 'UTF-8')
+    }
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -124,8 +137,8 @@ dependencies {
     modCompileOnly "dev.toma.configuration:configuration-forge-1.20.1:${configuration_version}"
     modCompileOnly "dev.engine-room.flywheel:flywheel-forge-1.20.1:${flywheel_version}"
     modCompileOnly "dev.architectury:architectury-forge:${architectury_version}"
-    modCompileOnly "net.createmod.ponder:Ponder-Forge-1.20.1:${ponder_version}"
-    modCompileOnly "com.simibubi.create:create-1.20.1:${create_version}:slim"
+    // Ponder 是独立 mod（modId=ponder），本 mod 只依赖它，不再依赖 Create。
+    modImplementation "net.createmod.ponder:Ponder-Forge-1.20.1:${ponder_version}"
 
     modRuntimeOnly "curse.maven:gregtechceu-modern-890405:${gtceu_file_id}"
     modRuntimeOnly "com.lowdragmc.ldlib:ldlib-forge-1.20.1:${ldlib_version}"
@@ -133,8 +146,14 @@ dependencies {
     modRuntimeOnly "dev.toma.configuration:configuration-forge-1.20.1:${configuration_version}"
     modRuntimeOnly "dev.engine-room.flywheel:flywheel-forge-1.20.1:${flywheel_version}"
     modRuntimeOnly "dev.architectury:architectury-forge:${architectury_version}"
-    modRuntimeOnly "net.createmod.ponder:Ponder-Forge-1.20.1:${ponder_version}"
-    modRuntimeOnly "com.simibubi.create:create-1.20.1:${create_version}:slim"
+    // Ponder 以 jar-in-jar 内嵌进本 mod 的 jar：玩家不再需要安装 Create，也不需要单装 Ponder。
+    // 依赖用非 mod 的 jarJar 配置，拿到的是 SRG 命名的生产 jar（见下方 metadata 修正）。
+    // 上面的 modImplementation 已让开发环境（runClient）能直接加载 Ponder，无需再单列 modRuntimeOnly。
+    jarJar("net.createmod.ponder:Ponder-Forge-1.20.1:${ponder_version}") { transitive = false }
+    // Ponder 把 flywheel 声明成 mandatory 的 CLIENT 依赖，原来这个 jar 由 Create 带进来；去掉 Create 后必须自己内嵌，
+    // 否则 Ponder 会因为缺 flywheel 直接加载失败。flywheel 是 MIT，可以一起分发。
+    jarJar("dev.engine-room.flywheel:flywheel-forge-1.20.1:${flywheel_version}") { transitive = false }
+
     modRuntimeOnly "mezz.jei:jei-1.20.1-forge:${jei_version}"
     modRuntimeOnly "maven.modrinth:justenoughcharacters:${jecharacters_version}"
 }
