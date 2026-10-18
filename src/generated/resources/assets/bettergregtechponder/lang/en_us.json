@@ -1,6 +1,7 @@
 {
   "bettergregtechponder.ponder.chemical_reactor_ui.header": "LV Chemical Reactor",
   "bettergregtechponder.ponder.chemical_reactor_ui.text_1": "The panel is the machine's own UI, without the player inventory.",
+  "bettergregtechponder.ponder.chemical_reactor_ui.text_10": "Swap the wrench for a soft mallet and the grid gives way to a single start/pause icon: one click toggles the machine.",
   "bettergregtechponder.ponder.chemical_reactor_ui.text_2": "64 grass blocks go into slot 1 and 64 glass into slot 2; the panel shows the machine's real inventory.",
   "bettergregtechponder.ponder.chemical_reactor_ui.text_3": "Fluids work the same way: tank 0 fills from 0 to 1000 mB in one second.",
   "bettergregtechponder.ponder.chemical_reactor_ui.text_4": "Covers can be put on a chosen side as well: a conveyor on top.",
@@ -8,6 +9,7 @@
   "bettergregtechponder.ponder.chemical_reactor_ui.text_6": "One recipe id does the rest: the panel fills the inputs, sets the circuit it needs, runs while the bar moves, then drops the product in.",
   "bettergregtechponder.ponder.chemical_reactor_ui.text_7": "Auto-output sides are machine state as well: items leave through the west side, fluids through the south side.",
   "bettergregtechponder.ponder.chemical_reactor_ui.text_8": "showFullUI() draws GT's whole UI, and each switch in that configurator column can be boxed on its own: power, auto-output, the circuit setting.",
+  "bettergregtechponder.ponder.chemical_reactor_ui.text_9": "Holding a wrench targets one face: the 3x3 grid is the rotation control, and the boxed centre cell is the face you are looking at.",
   "bettergregtechponder.ponder.ui.ui_details": "Show UI details",
   "bettergregtechponder.tooltip.button_index": "button %s",
   "bettergregtechponder.tooltip.slot_index": "slot %s",
