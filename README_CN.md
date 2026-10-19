@@ -306,3 +306,8 @@ src/main/java/com/ctnh/bettergregtechponder/
 > whole or in part, from this repository or from the copy inside the CTNH project, in source or compiled form - is still
 > taking GPL-3.0-licensed code: such use, modification or redistribution has to comply with the GPL-3.0, including source
 > disclosure and the same license for derivative works. Doing so places no obligation on the CTNH project itself.
+
+> **Minecraft 许可例外**：除 GPL-3.0 之外，本模组还依据 **BetterGregTechPonder MC Exception**
+> （[LICENSE-MCE.txt](<LICENSE-MCE.txt>)）发布——这是 GPL-3.0 第 7 条下的附加许可。Minecraft 模组必须直接
+> 链接 Minecraft 本体而不只是 Forge，而 Minecraft 是受 EULA 约束、与 GPLv3 不兼容的专有程序；本例外即授权传播
+> 由此形成的 covered work。

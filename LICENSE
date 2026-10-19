@@ -9,6 +9,14 @@ independent distribution of that code.
 This mod is released under the GNU General Public License v3.0. The full
 text of the license follows below.
 
+Minecraft licensing exception: this mod is additionally conveyed under the
+BetterGregTechPonder MC Exception (see LICENSE-MCE.txt), an additional
+permission under section 7 of the GPL-3.0. It exists because a Minecraft mod
+has to link with Minecraft itself directly, not only Minecraft Forge, and
+Minecraft is a GPLv3-incompatible proprietary program covered by the Minecraft
+End User License Agreement. The Exception permits conveying the resulting
+covered work.
+
 Use, modification and redistribution - including source code, compiled
 artifacts, and any jar-in-jar (bundled or nested) dependencies inside those
 artifacts - must comply with the GPL-3.0. This notice and the full license

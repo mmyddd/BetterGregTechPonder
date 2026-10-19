@@ -305,3 +305,9 @@ src/main/java/com/ctnh/bettergregtechponder/
 > whole or in part, from this repository or from the copy inside the CTNH project, in source or compiled form - is still
 > taking GPL-3.0-licensed code: such use, modification or redistribution has to comply with the GPL-3.0, including source
 > disclosure and the same license for derivative works. Doing so places no obligation on the CTNH project itself.
+
+> **Minecraft licensing exception**: in addition to the GPL-3.0, this mod is conveyed under the
+> **BetterGregTechPonder MC Exception** ([LICENSE-MCE.txt](<LICENSE-MCE.txt>)) - an additional permission under
+> section 7 of the GPL-3.0. A Minecraft mod must link with Minecraft itself directly, not only with Minecraft Forge,
+> and Minecraft is a GPLv3-incompatible proprietary program covered by the Minecraft EULA; this Exception grants the
+> permission to convey the resulting covered work.
