@@ -102,6 +102,16 @@ public final class MachineEdits {
         add(scene, machinePos, new AutoOutputChange(side, true, true), delayTicks);
     }
 
+    /** 把机器的正面转到某个方向，即蹲下右键的效果。 */
+    public static void setFrontFacing(SceneBuilder scene, BlockPos machinePos, Direction facing) {
+        setFrontFacing(scene, machinePos, facing, 0);
+    }
+
+    /** delayTicks 个 tick 后转过去。 */
+    public static void setFrontFacing(SceneBuilder scene, BlockPos machinePos, Direction facing, int delayTicks) {
+        add(scene, machinePos, new FrontFacingChange(facing), delayTicks);
+    }
+
     /** 设置并行仓的并行数。 */
     public static void setParallel(SceneBuilder scene, BlockPos hatchPos, int amount) {
         add(scene, hatchPos, new ParallelChange(amount));

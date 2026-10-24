@@ -2,41 +2,44 @@
 // Copyright (C) 2026 mmyddd
 package com.ctnh.bettergregtechponder.client.ponder.ui;
 
+import com.gregtechceu.gtceu.api.item.tool.GTToolType;
+import com.gregtechceu.gtceu.utils.ToolItemHelper;
+
 import net.createmod.catnip.math.Pointing;
+import net.createmod.ponder.api.element.InputElementBuilder;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
-import com.gregtechceu.gtceu.api.item.tool.GTToolType;
-import com.gregtechceu.gtceu.utils.ToolItemHelper;
-import org.jetbrains.annotations.Nullable;
 import com.ctnh.bettergregtechponder.BetterGregTechPonder;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 一次九宫格覆盖层的摆放，由 {@code MachineUIs#showToolGrid} 创建：
- * {@code MachineUIs.showToolGrid(scene, pos, Direction.NORTH).outline(4).show(120)}。
+ * {@code MachineUIs.showToolGrid(scene, pos, Direction.NORTH).highlight(1).show(120)}。
  *
  * <p>
- * 默认会在这块面旁边浮出手里那把工具的图标，箭头指向该面——九宫格本来就是「手持工具」时才出现的，
- * 不画出工具，观众只能猜要拿什么。图标默认抬到网格上方（朝上的面抬得更高），挡住格子时用
- * {@link #toolIconLift(double)} 再抬；不要那个图标时调 {@link #hideTool()}。
+ * 默认在这块面外挂一排「右键 + 手里的工具」的按键提示，图标抬到网格上方（朝上的面抬一格）。
+ * 挡住格子时用 {@link #toolIconLift(double)} 再抬，不要提示就调 {@link #hideTool()}。
  */
 public final class ToolGridPlacement {
 
     private final SceneBuilder builder;
     private final BlockPos pos;
     private final Direction face;
-    private final List<Outline> outlines = new ArrayList<>();
+    private final List<Highlight> highlights = new ArrayList<>();
     private GTToolType tool = GTToolType.WRENCH;
     private boolean tips = true;
     private boolean toolIcon = true;
+    /** 按键提示前面要不要再挂一句「蹲下 +」。 */
+    private boolean sneakClick;
     private Pointing iconPointing = Pointing.DOWN;
-    /** 图标额外抬高多少格；没写就按面方向取默认值。 */
+    /** 图标额外抬高多少格，没写就按面方向取默认值。 */
     private @Nullable Double iconLift;
     @Nullable
     private ItemStack iconOverride;
@@ -47,87 +50,93 @@ public final class ToolGridPlacement {
         this.face = face;
     }
 
-    /** 问方块要哪个工具的图标：扳手转向、软锤启停、硬锤静音，默认扳手。工具图标也随之换成这一把。 */
+    /** 问方块要哪个工具的图标：扳手转向、软锤启停、硬锤静音，默认扳手；按键提示里的物品也跟着换。 */
     public ToolGridPlacement tool(GTToolType tool) {
         this.tool = tool;
         return this;
     }
 
-    /** 工具图标改用指定物品，不写就按 {@link #tool} 取默认材质的工具。 */
+    /** 按键提示改用指定物品，不写就按 {@link #tool} 取默认材质的工具。 */
     public ToolGridPlacement toolItem(ItemStack stack) {
         this.iconOverride = stack.copy();
         return this;
     }
 
-    /** 工具图标浮在指向点的哪一侧，默认朝下（图标在面上方）。 */
+    /** 图标浮在指向点的哪一侧，默认朝下（图标在面上方）。 */
     public ToolGridPlacement toolIcon(Pointing pointing) {
         this.iconPointing = pointing;
         return this;
     }
 
-    /**
-     * 图标再往上抬多少格。默认朝上的面抬一格（贴着网格上沿，不再压住格子），
-     * 其余面抬半格。传 0 就贴在面中心。
-     */
+    /** 图标再往上抬多少格，默认朝上的面抬一格、其余面抬半格，传 0 就贴在面中心。 */
     public ToolGridPlacement toolIconLift(double blocks) {
         this.iconLift = Math.max(0, blocks);
         return this;
     }
 
-    /** 不画工具图标，只留九宫格。 */
+    /** 按键提示前面再加一句「蹲下 +」，变成「蹲下 + 右键 工具」。 */
+    public ToolGridPlacement sneakClick() {
+        this.sneakClick = true;
+        return this;
+    }
+
+    /** 不挂按键提示。 */
     public ToolGridPlacement hideTool() {
         this.toolIcon = false;
         return this;
     }
 
-    /** 不画格子里的动作图标，只留网格与红框。 */
+    /** 不画格子里的图标，只留网格。 */
     public ToolGridPlacement hideTips() {
         this.tips = false;
         return this;
     }
 
     /**
-     * 给第 {@code cell} 格套红框，行优先、从面外侧看：0 左上、1 上、2 右上、3 左、4 中心、
-     * 5 右、6 左下、7 下、8 右下，可以套多格。
+     * 高亮第 {@code cell} 格，行优先、从面外侧看：0 左上、1 上、2 右上、3 左、4 中心、
+     * 5 右、6 左下、7 下、8 右下，可以点名多格。
+     *
+     * <p>
+     * 被点名的格子画满，其余压到 0x44，与实机的高亮一致；一格都不点名时取正对这一面的中心格。
      */
-    public ToolGridPlacement outline(int cell) {
-        return outline(cell, 0);
+    public ToolGridPlacement highlight(int cell) {
+        return highlight(cell, 0);
     }
 
-    public ToolGridPlacement outline(int cell, int delayTicks) {
-        outlines.add(new Outline(clamp(cell), Math.max(0, delayTicks)));
+    public ToolGridPlacement highlight(int cell, int delayTicks) {
+        highlights.add(new Highlight(clamp(cell), Math.max(0, delayTicks)));
         return this;
     }
 
-    /** 展示 ticks 个 tick；红框按各自登记的延迟亮起。 */
+    /** 展示 ticks 个 tick，高亮按各自登记的延迟亮起。 */
     public void show(int ticks) {
         if (toolIcon) {
             showToolIcon(ticks);
         }
         builder.addInstruction(new ShowToolGridInstruction(
-                new ToolGridElement(new Plan(pos, face, tool, tips, List.copyOf(outlines))), ticks));
+                new ToolGridElement(new Plan(pos, face, tool, tips, List.copyOf(highlights))), ticks));
     }
 
-    /** 把工具的图标挂在这块面外侧，箭头指着要操作的那一面。 */
+    /** 把这排按键提示挂在这块面外侧，箭头指着要操作的那一面。 */
     private void showToolIcon(int ticks) {
         ItemStack stack = iconOverride != null ? iconOverride : defaultToolItem(tool);
         if (stack == null || stack.isEmpty()) {
             return;
         }
-        // 指向点压在面中心上，语音框的小尾巴才会正好戳到这一面；再往上抬一段，
-        // 免得图标压在网格上把格子挡住。
+        // 指向点压在面中心，再抬一段，免得图标挡住格子。
         double lift = iconLift == null ? (face == Direction.UP ? 1.0 : 0.5) : iconLift;
         Vec3 anchor = Vec3.atCenterOf(pos)
                 .add(face.getStepX() * 0.5, face.getStepY() * 0.5 + lift, face.getStepZ() * 0.5);
-        builder.overlay()
-                .showControls(anchor, iconPointing, ticks)
-                .withItem(stack);
+        InputElementBuilder controls = builder.overlay().showControls(anchor, iconPointing, ticks);
+        // 从左到右依次是「蹲下 +」「右键」「工具」，与实机一致。
+        if (sneakClick) {
+            controls.whileSneaking();
+        }
+        controls.rightClick();
+        controls.withItem(stack);
     }
 
-    /**
-     * 按 {@link GTToolType} 取一把默认材质的工具图标。电动型号没有对应的普通工具物品，
-     * 取不到就不画图标（这一次的九宫格照常画）。
-     */
+    /** 按 {@link GTToolType} 取一把默认材质的工具物品，取不到就不挂提示（九宫格照常画）。 */
     private static @Nullable ItemStack defaultToolItem(GTToolType tool) {
         try {
             ItemStack stack = ToolItemHelper.getToolItem(tool);
@@ -143,7 +152,7 @@ public final class ToolGridPlacement {
         return Math.max(0, Math.min(8, cell));
     }
 
-    record Plan(BlockPos pos, Direction face, GTToolType tool, boolean tips, List<Outline> outlines) {}
+    record Plan(BlockPos pos, Direction face, GTToolType tool, boolean tips, List<Highlight> highlights) {}
 
-    record Outline(int cell, int delayTicks) {}
+    record Highlight(int cell, int delayTicks) {}
 }

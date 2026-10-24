@@ -40,7 +40,7 @@ public final class MachineUIs {
      * 格子里是「点这里会做什么」的图标（扳手转向、软锤启停、硬锤静音……）。
      *
      * <pre>{@code
-     * MachineUIs.showToolGrid(builder, controllerPos, Direction.NORTH).outline(4).show(120);
+     * MachineUIs.showToolGrid(builder, controllerPos, Direction.NORTH).highlight(4).show(120);
      * }</pre>
      *
      * <p>
